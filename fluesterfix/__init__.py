@@ -470,6 +470,5 @@ if __name__ == '__main__':
 
 # TODO
 #  - Fehlermeldung bei Formularaufruf mit ungültiger rid -> Option anbieten für neues Secret
-#  - Link auf der Startseite zum Abfragen
 #  - Neuer Pfad zum Abrufen, damit der QR Code beim Neuladen nicht verschwindet
 #  - Doppelter Aufruf von Standardformular mit RID -> Internal Server Error beim Abschicken
