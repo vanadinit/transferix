@@ -570,3 +570,12 @@ def reveal(sid, key):
 
 if __name__ == '__main__':
     app.run(host='::')
+
+
+# TODO
+#  - Fehlermeldung bei Formularaufruf mit ungültiger rid -> Option anbieten für neues Secret
+#  - Link auf der Startseite zum Abfragen
+#  - Neuer Pfad zum Abrufen, damit der QR Code beim Neuladen nicht verschwindet
+#  - RID / URL Doppelung entfernen
+#  - RID Zeichenzahl erhöhen, weil Sicherheit
+#  - Doppelter Aufruf von Standardformular mit RID -> Internal Server Error beim Abschicken
