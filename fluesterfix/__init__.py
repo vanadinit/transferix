@@ -224,8 +224,8 @@ def validate_sid(sid):
 
 def get_rid_fields(args):
     if rid := args.get("rid"):
-        return f'?rid={rid}', f'<input name="rid" type="hidden" value="{args["rid"]}">'
-    return '', ''
+        return rid, f'?rid={rid}', f'<input name="rid" type="hidden" value="{args["rid"]}">'
+    return '', '', ''
 
 
 def get_qrcode_html_if_available(text):
@@ -239,7 +239,14 @@ def get_qrcode_html_if_available(text):
 
 @app.route('/')
 def form_plain():
-    rid_param, rid_field = get_rid_fields(request.args)
+    rid, rid_param, rid_field = get_rid_fields(request.args)
+    if rid and not isdir(REQUEST_INFO / rid):
+        return html(f'''
+            <h1>{_('error')}</h1>
+            <p>{_('wrong key')}</p>
+            <p>{_('new secret')}</p>
+        '''), 404
+
     return html(f'''
         <h1>{_('share new secret')}</h1>
         <p>{_('welcome desc')}</p>
@@ -253,7 +260,14 @@ def form_plain():
 
 @app.route('/file')
 def form_file():
-    rid_param, rid_field = get_rid_fields(request.args)
+    rid, rid_param, rid_field = get_rid_fields(request.args)
+    if rid and not isdir(REQUEST_INFO / rid):
+        return html(f'''
+            <h1>{_('error')}</h1>
+            <p>{_('wrong key')}</p>
+            <p>{_('new secret')}</p>
+        '''), 404
+
     max_size = f'<p>{max_size_msg()}</p>'
     return html(f'''
         <h1>{_('share new file')}</h1>
@@ -467,8 +481,5 @@ def reveal(sid, key):
 if __name__ == '__main__':
     app.run(host='::')
 
-
 # TODO
-#  - Fehlermeldung bei Formularaufruf mit ungültiger rid -> Option anbieten für neues Secret
 #  - Neuer Pfad zum Abrufen, damit der QR Code beim Neuladen nicht verschwindet
-#  - Doppelter Aufruf von Standardformular mit RID -> Internal Server Error beim Abschicken

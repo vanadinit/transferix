@@ -13,6 +13,8 @@ TRANS = {
         'download!': 'Download the secret',
         'download done': '&#x2705; File retrieved',
         'error': 'Error',
+        'new secret': 'Check and correct the key. '
+                      'Alternatively you can create a new secret and send the new link to the other side.',
         'only once': 'You can only do this once.',
         'request': 'Request a secret',
         'request desc': 'Give the Request-Link (validity 7 days) below to someone you want '
@@ -62,6 +64,9 @@ TRANS = {
         'download!': 'Vertrauliche Daten herunterladen',
         'download done': '&#x2705; Bereits heruntergeladen',
         'error': 'Fehler',
+        'new secret': 'Bitte prüfen Sie den Schlüssel. '
+                      'Alternativ können Sie ein neues Geheimnis für vertrauliche Daten generieren '
+                      'und den neuen Link an die andere Seite senden.',
         'only once': 'Sie können diesen Vorgang nur <em>einmalig</em> '
                      'durchführen.',
         'request': 'Vertrauliche Daten anfordern',
