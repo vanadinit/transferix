@@ -19,6 +19,8 @@ from markupsafe import escape
 from nacl.secret import SecretBox
 from nacl.utils import random
 
+from .i16n import TRANS
+
 try:
     import qrcode
     from qrcode.image.svg import SvgPathImage
@@ -31,6 +33,7 @@ app = Flask(__name__)
 
 DATA = environ.get('FLUESTERFIX_DATA', '/tmp')
 REQUEST_INFO = Path(DATA) / 'request_infos'
+RID_LEN = 27
 SID_LEN = 4
 SID_VALIDATOR = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
 
@@ -38,112 +41,6 @@ SID_VALIDATOR = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
 ALREADY_REVEALED = 0
 WRONG_KEY = 1
 OK = 2
-
-TRANS = {
-    'en': {
-        'already revealed': '<p>This secret has already been '
-                            'revealed.</p><p>If you are the recipient '
-                            'of this secret, but haven\'t revealed it, '
-                            'you should inform the creator of the '
-                            'secret about a potential security '
-                            'breach.</p>',
-        'autoreload': 'Auto reload every 5s',
-        'clip': 'Copy to clipboard',
-        'create link': 'Create link',
-        'download?': 'Download this secret?',
-        'download!': 'Download the secret',
-        'download done': '&#x2705; File retrieved',
-        'error': 'Error',
-        'only once': 'You can only do this once.',
-        'request': 'Request a secret',
-        'request desc': 'Give the Request-Link (validity 7 days) below to someone you want '
-                        'to retrieve a secret from. You can reload this page '
-                        'to see if the secret is already available. '
-                        'As long as you see this site the secret has not been entered yet',
-        'reveal!': 'Reveal the secret',
-        'reveal?': 'Reveal this secret?',
-        'rid missing': 'Request ID (rid) missing.',
-        'rid secret stored': 'Secret stored',
-        'rid secret stored desc': 'The requested secret can now be revealed on the other side.',
-        'secret': 'Secret',
-        'share new secret': 'Share a new secret',
-        'share new file': 'Share a new file',
-        'share this': 'Share this link',
-        'share this desc': 'Send this link to someone else. <em>It will '
-                           'be valid for 7 days.</em>',
-        'title': 'Share a secret',
-        'welcome desc': 'Enter your text into the box below. Once you '
-                        'hit the button, you will get a link that you '
-                        'can send to someone else. That link can only '
-                        'be used once.',
-        'welcome maybe file': 'Alternatively, you can '
-                              '<a href="/file{rid}">upload a file</a>.',
-        'welcome maybe text': 'Alternatively, you can '
-                              '<a href="/{rid}">use plain text</a>.',
-        'welcome file': 'Select the file to upload below. Once you hit '
-                        'the button, you will get a link that you can '
-                        'send to someone else. That link can only be '
-                        'used once.',
-        'welcome file max': 'Maximum allowed size',
-        'wrong key': 'Wrong key. Secret has been destroyed.',
-        'your secret': 'Here’s your secret. It is no longer accessible '
-                       'through the link, so copy it <em>now</em>.',
-    },
-    'de': {
-        'already revealed': '<p>Die vertraulichen Daten wurden bereits '
-                            'abgerufen.</p><p>Falls Sie Empfänger*in '
-                            'der Daten sind, diese aber nicht selbst '
-                            'abgerufen haben, sollten Sie die '
-                            'Versender*in über die potentielle '
-                            'Kompromittierung informieren.</p>',
-        'autoreload': 'Automatisch alle 5s neu laden',
-        'clip': 'In die Zwischenablage kopieren',
-        'create link': 'Link erzeugen',
-        'download?': 'Vertrauliche Daten herunterladen?',
-        'download!': 'Vertrauliche Daten herunterladen',
-        'download done': '&#x2705; Bereits heruntergeladen',
-        'error': 'Fehler',
-        'only once': 'Sie können diesen Vorgang nur <em>einmalig</em> '
-                     'durchführen.',
-        'request': 'Vertrauliche Daten anfordern',
-        'request desc': 'Geben Sie den untenstehenden Request-Link (7 Tage gültig) an die Person weiter, '
-                        'von der sie vertrauliche Daten erhalten möchten. Sie können dann '
-                        'diese Seite neu laden um zu sehen, ob bereits '
-                        'vertrauliche Daten vorhanden sind. So lange Sie diese Seite '
-                        'sehen ist, das noch nicht der Fall.',
-        'reveal!': 'Vertrauliche Daten anzeigen',
-        'reveal?': 'Vertrauliche Daten anzeigen?',
-        'rid missing': 'Die Request ID (rid) fehlt.',
-        'rid secret stored': 'Vertrauliche Daten gespeichert',
-        'rid secret stored desc': 'Die vertraulichen Daten können nun auf der anderen Seite abgerufen werden.',
-        'secret': 'Vertrauliche Daten',
-        'share new secret': 'Neue vertrauliche Daten',
-        'share new file': 'Neue vertrauliche Datei hochladen',
-        'share this': 'Geben Sie diesen Link weiter',
-        'share this desc': 'Geben Sie den folgenden Link weiter. <em>Er '
-                           'ist nur für 7 Tage gültig.</em>',
-        'title': 'Vertrauliche Daten weitergeben',
-        'welcome desc': 'Geben Sie Ihre vertraulichen Daten in die '
-                        'Textbox unten ein. Sobald Sie den Knopf '
-                        'betätigen, erhalten Sie einen Link, den Sie '
-                        'weitergeben können. Dieser Link kann nur ein '
-                        'einziges Mal abgerufen werden.',
-        'welcome maybe file': 'Alternativ können Sie '
-                              '<a href="/file{rid}">eine Datei hochladen</a>.',
-        'welcome maybe text': 'Alternativ können Sie '
-                              '<a href="/{rid}">einfachen Text verwenden</a>.',
-        'welcome file': 'Wählen Sie die hochzuladende Datei aus. Sobald '
-                        'Sie den Knopf betätigen, erhalten Sie einen '
-                        'Link, den Sie weitergeben können. Dieser Link '
-                        'kann nur ein einziges Mal abgerufen werden.',
-        'welcome file max': 'Maximal erlaubte Größe',
-        'wrong key': 'Falscher Schlüssel. Daten wurden gelöscht.',
-        'your secret': 'Untenstehend finden Sie die angefragten '
-                       'vertraulichen Daten. Von nun an ist es nicht '
-                       'mehr möglich, diesen Link zu verwenden. Sie '
-                       'sollten die Daten also <em>jetzt</em> sichern.',
-    },
-}
 
 
 def _(msg):
@@ -157,10 +54,10 @@ def get_lang():
     return 'en'
 
 
-def generate_sid():
+def generate_sid(length: int = SID_LEN):
     pool = ascii_letters + digits
     sid = ''
-    for i in range(SID_LEN):
+    for i in range(length):
         sid += choice(pool)
     return sid
 
@@ -272,7 +169,7 @@ def create_rid():
     cleanup_rid_infos()
     while True:
         try:
-            rid = generate_sid()
+            rid = generate_sid(length=RID_LEN)
             mkdir(REQUEST_INFO / rid)
             return rid
         except FileExistsError:
@@ -398,7 +295,6 @@ def request_consume():
         <h1>{_('request')}</h1>
         <p>{_('request desc')}</p>
         {qrcode_html}
-        <p>Request-ID: {rid}</p>
         <p>Request-Link: <input id="copytarget" type="text" value="{request_link}"></p>
         <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
         <p><label><input type="checkbox" id="autoReloadToggle"> {_('autoreload')}</label></p>
@@ -576,6 +472,4 @@ if __name__ == '__main__':
 #  - Fehlermeldung bei Formularaufruf mit ungültiger rid -> Option anbieten für neues Secret
 #  - Link auf der Startseite zum Abfragen
 #  - Neuer Pfad zum Abrufen, damit der QR Code beim Neuladen nicht verschwindet
-#  - RID / URL Doppelung entfernen
-#  - RID Zeichenzahl erhöhen, weil Sicherheit
 #  - Doppelter Aufruf von Standardformular mit RID -> Internal Server Error beim Abschicken
