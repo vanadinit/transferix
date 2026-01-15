@@ -287,6 +287,23 @@ def request_secret():
     return redirect(f'/request_consume?rid={rid}')
 
 
+@app.route('/request_info')
+def request_info():
+    # Hier kommt die Info hin mit dem Button zum request consume, wenn man die Daten erhalten will
+
+    # Work in Progress
+    # FIXME: Diese und die nächste Funktion (request_consume) sind noch nicht fertig überarbeitet.
+    #  Da ich aber nicht weiß, ob ich noch dazu komme, committe ich das hier halbfertig.
+
+    return html(f'''
+        <h1>{_('request')}</h1>
+        <p>{_('request desc')}</p>
+        {qrcode_html}
+        <p>Request-Link: <input id="copytarget" type="text" value="{request_link}"></p>
+        <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
+        <p><label><input type="checkbox" id="autoReloadToggle"> {_('autoreload')}</label></p>
+    '''), 200
+
 @app.route('/request_consume')
 def request_consume():
     rid = request.args.get('rid')
@@ -312,7 +329,7 @@ def request_consume():
         <p>Request-Link: <input id="copytarget" type="text" value="{request_link}"></p>
         <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
         <p><label><input type="checkbox" id="autoReloadToggle"> {_('autoreload')}</label></p>
-    ''')
+    '''), 200
 
 
 @app.route('/new', methods=['POST'])
