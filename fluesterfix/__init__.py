@@ -19,7 +19,7 @@ from markupsafe import escape
 from nacl.secret import SecretBox
 from nacl.utils import random
 
-from .i16n import TRANS
+from .i18n import TRANS
 
 try:
     import qrcode
