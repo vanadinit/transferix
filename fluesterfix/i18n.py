@@ -39,9 +39,10 @@ TRANS = {
                         'can send to someone else. That link can only '
                         'be used once.',
         'welcome maybe file': 'Alternatively, you can '
-                              '<a href="/file{rid}">upload a file</a> or <a href="/request">request a secret</a>.',
+                              '<a href="/file{rid}">upload a file</a>',
         'welcome maybe text': 'Alternatively, you can '
-                              '<a href="/{rid}">use plain text</a> or <a href="/request">request a secret</a>.',
+                              '<a href="/{rid}">use plain text</a>',
+        'welcome maybe request': ' or <a href="/request">request a secret</a>',
         'welcome file': 'Select the file to upload below. Once you hit '
                         'the button, you will get a link that you can '
                         'send to someone else. That link can only be '
@@ -94,9 +95,10 @@ TRANS = {
                         'weitergeben können. Dieser Link kann nur ein '
                         'einziges Mal abgerufen werden.',
         'welcome maybe file': 'Alternativ können Sie '
-                              '<a href="/file{rid}">eine Datei hochladen</a> oder <a href="/request">vertrauliche Daten anfordern</a>.',
+                              '<a href="/file{rid}">eine Datei hochladen</a>',
         'welcome maybe text': 'Alternativ können Sie '
-                              '<a href="/{rid}">einfachen Text verwenden</a> oder <a href="/request">vertrauliche Daten anfordern</a>.',
+                              '<a href="/{rid}">einfachen Text verwenden</a>',
+        'welcome maybe request': ' oder <a href="/request">vertrauliche Daten anfordern</a>',
         'welcome file': 'Wählen Sie die hochzuladende Datei aus. Sobald '
                         'Sie den Knopf betätigen, erhalten Sie einen '
                         'Link, den Sie weitergeben können. Dieser Link '

@@ -249,7 +249,7 @@ def form_plain():
     return html(f'''
         <h1>{_('share new secret')}</h1>
         <p>{_('welcome desc')}</p>
-        <p>{_('welcome maybe file').format(rid=rid_param)}</p>
+        <p>{_('welcome maybe file').format(rid=rid_param)}{_("welcome maybe request") if not rid else ''}.</p>
         <form action="/new" method="post">
             <textarea name="data"></textarea>{rid_field}
             <input type="submit" value="&#x1f517; {_('create link')}">
@@ -271,7 +271,7 @@ def form_file():
     return html(f'''
         <h1>{_('share new file')}</h1>
         <p>{_('welcome file')}</p>
-        <p>{_('welcome maybe text').format(rid=rid_param)}</p>
+        <p>{_('welcome maybe text').format(rid=rid_param)}{_("welcome maybe request") if not rid else ''}.</p>
         {max_size}
         <form action="/new" method="post" enctype="multipart/form-data">
             <input type="file" name="file">{rid_field}
