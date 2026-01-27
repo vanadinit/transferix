@@ -233,8 +233,7 @@ def get_qrcode_html_if_available(text):
         return ''
     qr = qrcode.QRCode(image_factory=SvgPathImage, box_size=15, border=4)
     qr.add_data(text)
-    svg = qr.make_image(fill_color="black", back_color="white").to_string().decode()
-    return f'<details><summary>QR-Code</summary>{svg}</details>'
+    return qr.make_image(fill_color="black", back_color="white").to_string().decode()
 
 
 @app.route('/')
@@ -283,17 +282,15 @@ def form_file():
 
 @app.route('/request')
 def request_secret():
-    rid = create_rid()
-    return redirect(f'/request_consume?rid={rid}')
+    rid = request.args.get('rid') or create_rid()
 
+    scheme = request.headers.get('x-forwarded-proto', 'http')
+    host = request.headers.get('x-forwarded-host', request.headers['host'])
 
-@app.route('/request_info')
-def request_info():
-    # Hier kommt die Info hin mit dem Button zum request consume, wenn man die Daten erhalten will
+    request_link = f'{scheme}://{host}/?rid={rid}'
+    qrcode_html = get_qrcode_html_if_available(request_link)
 
-    # Work in Progress
-    # FIXME: Diese und die nächste Funktion (request_consume) sind noch nicht fertig überarbeitet.
-    #  Da ich aber nicht weiß, ob ich noch dazu komme, committe ich das hier halbfertig.
+    consume_url = url_for('request_consume', rid=rid)
 
     return html(f'''
         <h1>{_('request')}</h1>
@@ -301,34 +298,30 @@ def request_info():
         {qrcode_html}
         <p>Request-Link: <input id="copytarget" type="text" value="{request_link}"></p>
         <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
-        <p><label><input type="checkbox" id="autoReloadToggle"> {_('autoreload')}</label></p>
+        <hr>
+        <p><a href="{consume_url}" class="button">{_('go to receive')}</a></p>
     '''), 200
+
 
 @app.route('/request_consume')
 def request_consume():
     rid = request.args.get('rid')
-    if not rid:
+    if not rid or not isdir(REQUEST_INFO / rid):
         return html(f'''
             <h1>{_('error')}</h1>
-            {_('rid missing')}
+            {_('rid missing or invalid')}
         '''), 400
+
     if isfile(REQUEST_INFO / rid / 'info'):
         with open(REQUEST_INFO / rid / 'info') as fp:
             sid_url = fp.read()
         rmtree(REQUEST_INFO / rid)
         return redirect(sid_url)
-    scheme = request.headers.get('x-forwarded-proto', 'http')
-    host = request.headers.get('x-forwarded-host', request.headers['host'])
-    request_link = f'{scheme}://{host}/?rid={rid}'
-    qrcode_html = get_qrcode_html_if_available(request_link)
 
     return html(f'''
-        <h1>{_('request')}</h1>
-        <p>{_('request desc')}</p>
-        {qrcode_html}
-        <p>Request-Link: <input id="copytarget" type="text" value="{request_link}"></p>
-        <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
-        <p><label><input type="checkbox" id="autoReloadToggle"> {_('autoreload')}</label></p>
+        <h1>{_('waiting for secret')}</h1>
+        <p>{_('waiting for secret desc')}</p>
+        <p><label><input type="checkbox" id="autoReloadToggle" checked> {_('autoreload')}</label></p>
     '''), 200
 
 
@@ -497,6 +490,3 @@ def reveal(sid, key):
 
 if __name__ == '__main__':
     app.run(host='::')
-
-# TODO
-#  - Neuer Pfad zum Abrufen, damit der QR Code beim Neuladen nicht verschwindet
