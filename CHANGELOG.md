@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## next
+
+### Fixed
+
+-   Fixed `Connection reset by peer` errors (depending on system load
+    and configuration).
+
 ## 3.0.0 - 2025-05-06
 
 ### Changed
