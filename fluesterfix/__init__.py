@@ -348,6 +348,23 @@ def new():
 
 @app.route('/get/<sid>/<key>')
 def get(sid, key):
+    # The HTML form above causes clients to send an HTTP body (even
+    # though it doesn't carry any useful information).
+    #
+    # Problem is, gunicorn and/or flask does not necessarily `recv()`
+    # this body from the socket: Sometimes we see an `recvfrom(...) =
+    # 123` (assuming the full HTTP request is 123 bytes in size) and
+    # sometimes it's just `recvfrom(...) = 100` (assuming the headers
+    # alone are 100 bytes in size). This depends on system load and
+    # system configuration.
+    #
+    # Those remaining 23 bytes will then linger in kernel space. This
+    # can eventually cause our peer (i.e., a reverse proxy like nginx)
+    # to get a TCP RST.
+    #
+    # To avoid this, force gunicorn/flask to read the body.
+    _dummy = len(request.data)
+
     validate_key(key)
     validate_sid(sid)
     exists, as_file = secret_exists(sid)
