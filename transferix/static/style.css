@@ -101,3 +101,9 @@ textarea {
     line-height: 1.2em;
     background-color: var(--bg-color-input);
 }
+
+hr {
+    border: none;
+    border-top: 1px solid var(--line-color);
+    margin: 2em 0;
+}

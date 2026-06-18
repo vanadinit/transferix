@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
 
+import unicodedata
 from base64 import b64decode, b64encode
+from os import environ, mkdir, rename, makedirs
+from os.path import isdir, isfile, join
 from pathlib import Path
 from random import choice
-from os import environ, mkdir, rename, makedirs, listdir, stat
-from os.path import isdir, isfile, join
 from re import compile as re_compile
 from shutil import rmtree
 from string import ascii_letters, digits
 from subprocess import run
-import unicodedata
-from time import time
+from typing import Any
 from urllib.parse import quote
 
 from flask import Flask, jsonify, make_response, redirect, request, url_for
@@ -19,7 +19,10 @@ from markupsafe import escape
 from nacl.secret import SecretBox
 from nacl.utils import random
 
-from .i18n import TRANS
+try:
+    from .language import TRANS
+except (ImportError, ValueError):
+    from language import TRANS
 
 try:
     import qrcode
@@ -36,6 +39,7 @@ REQUEST_INFO = Path(DATA) / 'request_infos'
 RID_LEN = 27
 SID_LEN = 4
 SID_VALIDATOR = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
+RID_VALIDATOR = re_compile(f'^[A-Za-z0-9]{{{RID_LEN}}}$')
 
 # I wish there were enums in Python.
 ALREADY_REVEALED = 0
@@ -43,18 +47,18 @@ WRONG_KEY = 1
 OK = 2
 
 
-def _(msg):
+def _(msg: str) -> str:
     return TRANS[get_lang()].get(msg, msg)
 
 
-def get_lang():
+def get_lang() -> str:
     selected = request.accept_languages.best_match(TRANS.keys())
     if selected:
         return selected
     return 'en'
 
 
-def generate_sid(length: int = SID_LEN):
+def generate_sid(length: int = SID_LEN) -> str:
     pool = ascii_letters + digits
     sid = ''
     for i in range(length):
@@ -62,7 +66,7 @@ def generate_sid(length: int = SID_LEN):
     return sid
 
 
-def html(body):
+def html(body: str) -> str:
     css_url = environ.get('TRANSFERIX_CSS', url_for('static', filename='style.css'))
     logo_url = environ.get('TRANSFERIX_LOGO', url_for('static', filename='logo.png'))
     logo_dark_url = environ.get('TRANSFERIX_LOGO_DARK', url_for('static', filename='logo-darkmode.png'))
@@ -90,7 +94,7 @@ def html(body):
 </html>'''
 
 
-def max_size_msg():
+def max_size_msg() -> str:
     max_size_env = environ.get('TRANSFERIX_MAX_FILE_SIZE')
     if max_size_env is None:
         return ''
@@ -113,7 +117,7 @@ def max_size_msg():
         return ''
 
 
-def retrieve(sid, key):
+def retrieve(sid: str, key: str) -> tuple[bytes | None, str | None, int]:
     # Try to rename this sid's directory. This is an atomic operation on
     # POSIX file systems, meaning two concurrent requests cannot rename
     # the same directory -- for one of them, it will look like the
@@ -153,20 +157,26 @@ def retrieve(sid, key):
     return decrypted_bytes, filename, OK
 
 
-def secret_exists(sid):
+def secret_exists(sid: str) -> tuple[bool, bool]:
     return isdir(join(DATA, sid)), isfile(join(DATA, sid, 'filename'))
 
 
-def cleanup_rid_infos():
-    now = time()
-    for f in listdir(REQUEST_INFO):
-        if stat(REQUEST_INFO / f).st_mtime < now - 7 * 24 * 60 * 60:
-            rmtree(REQUEST_INFO / f)
+def is_valid_rid(rid: str | None) -> bool:
+    return bool(rid and isinstance(rid, str) and RID_VALIDATOR.search(rid))
 
 
-def create_rid():
+def is_valid_unused_rid(rid: str | None) -> bool:
+    if not is_valid_rid(rid):
+        return False
+    if not isdir(REQUEST_INFO / rid):
+        return False
+    if isfile(REQUEST_INFO / rid / 'info'):
+        return False
+    return True
+
+
+def create_rid() -> str:
     makedirs(REQUEST_INFO, exist_ok=True)
-    cleanup_rid_infos()
     while True:
         try:
             rid = generate_sid(length=RID_LEN)
@@ -176,12 +186,25 @@ def create_rid():
             continue
 
 
-def update_rid_info(rid, sid_url):
-    with open(REQUEST_INFO / rid / 'info', 'w') as fp:
-        fp.write(sid_url)
+def update_rid_info(rid: str, sid_url: str) -> bool:
+    lock_dir = REQUEST_INFO / rid / 'lock'
+    try:
+        mkdir(lock_dir)
+    except FileExistsError:
+        return False
+
+    temp_file = REQUEST_INFO / rid / 'info.tmp'
+    info_file = REQUEST_INFO / rid / 'info'
+    try:
+        with open(temp_file, 'w') as fp:
+            fp.write(sid_url)
+        rename(temp_file, info_file)
+        return True
+    except OSError:
+        return False
 
 
-def store(secret_bytes, filename):
+def store(secret_bytes: bytes, filename: str | None) -> tuple[str, str]:
     while True:
         try:
             # Again, mkdir is an atomic operation on POSIX file systems.
@@ -212,23 +235,17 @@ def store(secret_bytes, filename):
     return sid, key
 
 
-def validate_key(key):
+def validate_key(key: str) -> None:
     # It's random bytes, there's not a lot to validate, except for the
     # length (32 bytes encoded using base64 - minus the rightmost '=').
     assert len(key) == 44 - 1
 
 
-def validate_sid(sid):
+def validate_sid(sid: str) -> None:
     assert SID_VALIDATOR.search(sid) is not None
 
 
-def get_rid_fields(args):
-    if rid := args.get("rid"):
-        return rid, f'?rid={rid}', f'<input name="rid" type="hidden" value="{args["rid"]}">'
-    return '', '', ''
-
-
-def get_qrcode_html_if_available(text):
+def get_qrcode_html_if_available(text: str) -> str:
     if not enable_qrcode:
         return ''
     qr = qrcode.QRCode(image_factory=SvgPathImage, box_size=15, border=4)
@@ -237,14 +254,19 @@ def get_qrcode_html_if_available(text):
 
 
 @app.route('/')
-def form_plain():
-    rid, rid_param, rid_field = get_rid_fields(request.args)
-    if rid and not isdir(REQUEST_INFO / rid):
-        return html(f'''
-            <h1>{_('error')}</h1>
-            <p>{_('wrong key')}</p>
-            <p>{_('new secret')}</p>
-        '''), 404
+@app.route('/<rid>')
+def form_plain(rid: str | None = None) -> str | tuple[str, int]:
+    if rid:
+        if not is_valid_unused_rid(rid):
+            return html(f'''
+                <h1>{_('error')}</h1>
+                <p>{_('rid missing or invalid')}</p>
+            '''), 404
+        rid_param = f'/{rid}'
+        rid_field = f'<input name="rid" type="hidden" value="{rid}">'
+    else:
+        rid_param = ''
+        rid_field = ''
 
     return html(f'''
         <h1>{_('share new secret')}</h1>
@@ -258,14 +280,19 @@ def form_plain():
 
 
 @app.route('/file')
-def form_file():
-    rid, rid_param, rid_field = get_rid_fields(request.args)
-    if rid and not isdir(REQUEST_INFO / rid):
-        return html(f'''
-            <h1>{_('error')}</h1>
-            <p>{_('wrong key')}</p>
-            <p>{_('new secret')}</p>
-        '''), 404
+@app.route('/file/<rid>')
+def form_file(rid: str | None = None) -> str | tuple[str, int]:
+    if rid:
+        if not is_valid_unused_rid(rid):
+            return html(f'''
+                <h1>{_('error')}</h1>
+                <p>{_('rid missing or invalid')}</p>
+            '''), 404
+        rid_param = rid
+        rid_field = f'<input name="rid" type="hidden" value="{rid}">'
+    else:
+        rid_param = ''
+        rid_field = ''
 
     max_size = f'<p>{max_size_msg()}</p>'
     return html(f'''
@@ -281,13 +308,23 @@ def form_file():
 
 
 @app.route('/request')
-def request_secret():
-    rid = request.args.get('rid') or create_rid()
+def request_secret_init() -> Any:
+    rid = create_rid()
+    return redirect(url_for('request_secret', rid=rid))
+
+
+@app.route('/request/<rid>')
+def request_secret(rid: str) -> str | tuple[str, int]:
+    if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
+        return html(f'''
+            <h1>{_('error')}</h1>
+            <p>{_('rid missing or invalid')}</p>
+        '''), 404
 
     scheme = request.headers.get('x-forwarded-proto', 'http')
     host = request.headers.get('x-forwarded-host', request.headers['host'])
 
-    request_link = f'{scheme}://{host}/?rid={rid}'
+    request_link = f'{scheme}://{host}/{rid}'
     qrcode_html = get_qrcode_html_if_available(request_link)
 
     consume_url = url_for('request_consume', rid=rid)
@@ -303,13 +340,12 @@ def request_secret():
     '''), 200
 
 
-@app.route('/request_consume')
-def request_consume():
-    rid = request.args.get('rid')
-    if not rid or not isdir(REQUEST_INFO / rid):
+@app.route('/request/<rid>/consume')
+def request_consume(rid: str) -> str | tuple[str, int] | Any:
+    if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
         return html(f'''
             <h1>{_('error')}</h1>
-            {_('rid missing or invalid')}
+            <p>{_('rid missing or invalid')}</p>
         '''), 400
 
     if isfile(REQUEST_INFO / rid / 'info'):
@@ -326,11 +362,24 @@ def request_consume():
 
 
 @app.route('/new', methods=['POST'])
-def new():
-    rid = None
+@app.route('/new/<rid>', methods=['POST'])
+def new(rid: str | None = None) -> str | tuple[str, int] | Any:
+    rid = rid or request.form.get('rid') or (request.json.get('rid') if request.is_json else None)
+    if rid:
+        if not is_valid_unused_rid(rid):
+            if request.is_json:
+                return jsonify({
+                    'status': 'error',
+                    'msg': 'rid missing or invalid',
+                }), 400
+            else:
+                return html(f'''
+                    <h1>{_('error')}</h1>
+                    <p>{_('rid missing or invalid')}</p>
+                '''), 400
+
     try:
         if request.is_json:
-            rid = request.json.get('rid')
             if 'data_base64' in request.json and 'filename' in request.json:
                 secret_bytes = b64decode(request.json['data_base64'])
                 filename = request.json['filename']
@@ -355,8 +404,6 @@ def new():
         else:
             return redirect(url_for('form_plain'))
 
-    rid = rid or request.form.get('rid')
-
     sid, key = store(secret_bytes, filename)
     scheme = request.headers.get('x-forwarded-proto', 'http')
     host = request.headers.get('x-forwarded-host', request.headers['host'])
@@ -364,7 +411,18 @@ def new():
     qrcode_html = get_qrcode_html_if_available(sid_url)
 
     if rid:
-        update_rid_info(rid, sid_url)
+        if not update_rid_info(rid, sid_url):
+            if request.is_json:
+                return jsonify({
+                    'status': 'error',
+                    'msg': 'rid missing or invalid',
+                }), 400
+            else:
+                return html(f'''
+                    <h1>{_('error')}</h1>
+                    <p>{_('rid missing or invalid')}</p>
+                '''), 400
+
         return html(f'''
             <h1>{_('rid secret stored')}</h1>
             <p>{_('rid secret stored desc')}</p>
@@ -386,7 +444,7 @@ def new():
 
 
 @app.route('/get/<sid>/<key>')
-def get(sid, key):
+def get(sid: str, key: str) -> str | tuple[str, int]:
     # The HTML form above causes clients to send an HTTP body (even
     # though it doesn't carry any useful information).
     #
@@ -446,7 +504,7 @@ def get(sid, key):
 
 
 @app.route('/reveal/<sid>/<key>', methods=['POST'])
-def reveal(sid, key):
+def reveal(sid: str, key: str) -> str | tuple[str, int] | Any:
     validate_key(key)
     validate_sid(sid)
     secret_bytes, filename, status = retrieve(sid, key)

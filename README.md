@@ -48,9 +48,10 @@ Use the following environment variables:
 -   `$TRANSFERIX_ENABLE_QR`: Set to an arbitrary value to show QR code
     of the share links. Needs `qrcode` Python library to be installed.
 
-The program does not automatically remove secrets which have never been
-retrieved. You might want to install a cron job on your system to remove
-old directories in `$TRANSFERIX_DATA` based on their mtime.
+The program does not automatically remove secrets or requests which have
+never been retrieved or consumed. You might want to install a cron job on your
+system to remove old directories in `$TRANSFERIX_DATA` (including those in
+`$TRANSFERIX_DATA/request_infos`) based on their mtime.
 
 
 API
