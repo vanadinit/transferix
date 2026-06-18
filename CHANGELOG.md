@@ -5,6 +5,19 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## next
 
+## 4.0.0 - 2026-06-18
+
+- Forked from fluesterfix and rename to transferix
+
+### Added
+- Requesting secrets
+- QR Code functionality
+
+### Changed
+- Split init.py into multiple files (this is at the cost, that you cannot simply run `__init__.py` anymore.)
+- Add type hints
+- Replace setup.py with pyproject.toml
+
 ### Fixed
 
 -   Fixed `Connection reset by peer` errors (depending on system load
