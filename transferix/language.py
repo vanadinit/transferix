@@ -1,3 +1,17 @@
+from flask import request
+
+
+def get_lang() -> str:
+    selected = request.accept_languages.best_match(TRANS.keys())
+    if selected:
+        return selected
+    return 'en'
+
+
+def _(msg: str) -> str:
+    return TRANS[get_lang()].get(msg, msg)
+
+
 TRANS = {
     'en': {
         'already revealed': '<p>This secret has already been '

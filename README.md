@@ -22,9 +22,9 @@ file system that guarantees POSIX semantics.
 Running
 -------
 
-For development and testing, just run the script:
+For development and testing, just run:
 
-    $ ./transferix/__init__.py
+    $ flask --app transferix:app run --debug
 
 For anything else, set up a WSGI environment. A Python package can be
 installed using `pip install -e .`.
@@ -41,7 +41,7 @@ Use the following environment variables:
 -   `$TRANSFERIX_LOGO_DARK`: URL to custom logo in dark mode to use,
     defaults to `logo-darkmode.png`.
 -   `$TRANSFERIX_LABEL`: Custom alternative name for logo, defaults to
-    `//SEIBERT/MEDIA`.
+    `my company`.
 -   `$TRANSFERIX_MAX_FILE_SIZE`: Maximum allowed size (in bytes) for
     file uploads. The actual filtering must be done in your reverse
     proxy; this variable only displays that limit. Unset by default.
