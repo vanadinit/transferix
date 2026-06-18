@@ -3,7 +3,8 @@ transferix
 
 A simple tool for transferring secrets which will self-destruct on retrieval.
 
-This is a fork of https://github.com/seibert-media/fluesterfix implementing some additional features.
+This is a fork of https://github.com/seibert-media/fluesterfix
+implementing additional features like requesting secrets and using QR-Codes.
 
 Installation
 ------------
