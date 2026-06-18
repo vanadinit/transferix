@@ -25,13 +25,13 @@ try:
     import qrcode
     from qrcode.image.svg import SvgPathImage
 
-    enable_qrcode = bool(environ.get('FLUESTERFIX_ENABLE_QR'))
+    enable_qrcode = bool(environ.get('TRANSFERIX_ENABLE_QR'))
 except ImportError:
     enable_qrcode = False
 
 app = Flask(__name__)
 
-DATA = environ.get('FLUESTERFIX_DATA', '/tmp')
+DATA = environ.get('TRANSFERIX_DATA', '/tmp')
 REQUEST_INFO = Path(DATA) / 'request_infos'
 RID_LEN = 27
 SID_LEN = 4
@@ -63,10 +63,10 @@ def generate_sid(length: int = SID_LEN):
 
 
 def html(body):
-    css_url = environ.get('FLUESTERFIX_CSS', url_for('static', filename='style.css'))
-    logo_url = environ.get('FLUESTERFIX_LOGO', url_for('static', filename='logo.png'))
-    logo_dark_url = environ.get('FLUESTERFIX_LOGO_DARK', url_for('static', filename='logo-darkmode.png'))
-    logo_alt = environ.get('FLUESTERFIX_LABEL', 'seibert//')
+    css_url = environ.get('TRANSFERIX_CSS', url_for('static', filename='style.css'))
+    logo_url = environ.get('TRANSFERIX_LOGO', url_for('static', filename='logo.png'))
+    logo_dark_url = environ.get('TRANSFERIX_LOGO_DARK', url_for('static', filename='logo-darkmode.png'))
+    logo_alt = environ.get('TRANSFERIX_LABEL', 'my company')
 
     return f'''<!DOCTYPE html>
 <html lang="{get_lang()}">
@@ -91,7 +91,7 @@ def html(body):
 
 
 def max_size_msg():
-    max_size_env = environ.get('FLUESTERFIX_MAX_FILE_SIZE')
+    max_size_env = environ.get('TRANSFERIX_MAX_FILE_SIZE')
     if max_size_env is None:
         return ''
 

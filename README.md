@@ -1,8 +1,9 @@
-fluesterfix
+transferix
 ===========
 
-A simple tool for sharing secrets which will self-destruct on retrieval.
+A simple tool for transferring secrets which will self-destruct on retrieval.
 
+This is a fork of https://github.com/seibert-media/fluesterfix implementing some additional features.
 
 Installation
 ------------
@@ -23,33 +24,33 @@ Running
 
 For development and testing, just run the script:
 
-    $ ./fluesterfix/__init__.py
+    $ ./transferix/__init__.py
 
 For anything else, set up a WSGI environment. A Python package can be
 installed using `pip install -e .`.
 
 Use the following environment variables:
 
--   `$FLUESTERFIX_DATA`: The directory where data will be stored. Must
+-   `$TRANSFERIX_DATA`: The directory where data will be stored. Must
     exist prior to running the program. Should be created by sysadmin
     with correct permissions. Defaults to `/tmp` for quick tests.
--   `$FLUESTERFIX_CSS`: URL to custom CSS to use, defaults to
+-   `$TRANSFERIX_CSS`: URL to custom CSS to use, defaults to
     `style.css`.
--   `$FLUESTERFIX_LOGO`: URL to custom logo to use, defaults to
+-   `$TRANSFERIX_LOGO`: URL to custom logo to use, defaults to
     `logo.png`.
--   `$FLUESTERFIX_LOGO_DARK`: URL to custom logo in dark mode to use,
+-   `$TRANSFERIX_LOGO_DARK`: URL to custom logo in dark mode to use,
     defaults to `logo-darkmode.png`.
--   `$FLUESTERFIX_LABEL`: Custom alternative name for logo, defaults to
+-   `$TRANSFERIX_LABEL`: Custom alternative name for logo, defaults to
     `//SEIBERT/MEDIA`.
--   `$FLUESTERFIX_MAX_FILE_SIZE`: Maximum allowed size (in bytes) for
+-   `$TRANSFERIX_MAX_FILE_SIZE`: Maximum allowed size (in bytes) for
     file uploads. The actual filtering must be done in your reverse
     proxy; this variable only displays that limit. Unset by default.
--   `$FLUESTERFIX_ENABLE_QR`: Set to an arbitrary value to show QR code
+-   `$TRANSFERIX_ENABLE_QR`: Set to an arbitrary value to show QR code
     of the share links. Needs `qrcode` Python library to be installed.
 
 The program does not automatically remove secrets which have never been
 retrieved. You might want to install a cron job on your system to remove
-old directories in `$FLUESTERFIX_DATA` based on their mtime.
+old directories in `$TRANSFERIX_DATA` based on their mtime.
 
 
 API

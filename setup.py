@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='fluesterfix',
+    name='transferix',
     packages=find_packages(),
 )
