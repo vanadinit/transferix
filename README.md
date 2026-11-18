@@ -62,7 +62,7 @@ Post a JSON object to `/new` to create a new secret programmatically,
 this object must contain a `string` typed member called `data` holding
 your secret:
 
-    $ curl -X POST https://my.ff/new -H 'Content-Type: application/json' \
+    $ curl -X POST https://my.ff/api/new -H 'Content-Type: application/json' \
         --data '{ "data": "this is my secret" }'
     {"secret_link":"https://my.ff/get/foo/bar","status":"ok"}
 
@@ -71,14 +71,8 @@ As you can see, you’ll get a JSON response containing the secret link.
 On errors, `status` will be the string `error` and there will be an
 additional field called `msg` that indicates what went wrong:
 
-    $ curl -X POST https://my.ff/new -H 'Content-Type: application/json' \
+    $ curl -X POST https://my.ff/api/new -H 'Content-Type: application/json' \
         --data '{ "data": "" }'
     {"msg":"empty secret","status":"error"}
 
-To upload “files”, use `data_base64` and provide the `filename` field:
 
-    $ curl -X POST https://my.ff/new -H 'Content-Type: application/json' \
-        --data '{"data_base64": "'"$(base64 <some_file | tr -d '\n')"'", "filename": "whatever.bin"}'
-
-(The only difference between “files” and normal secrets is that “files”
-are being presented as a download to the client’s browser.)
