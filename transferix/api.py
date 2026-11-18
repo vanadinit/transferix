@@ -95,7 +95,7 @@ def api_request() -> tuple[str, int]:
 @app.route('/api/request/<rid>/consume', methods=['POST'])
 def api_request_consume(rid: int) -> tuple[str, int]:
     if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
-        jsonify({
+        return jsonify({
             'status': 'error',
             'msg': 'rid missing or invalid',
         }), 400
