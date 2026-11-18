@@ -35,7 +35,7 @@ def create_rid() -> str:
             continue
 
 
-def update_rid_info(rid: str, sid_url: str) -> bool:
+def update_rid_info(rid: str, sid: str, key: str) -> bool:
     lock_dir = REQUEST_INFO / rid / 'lock'
     try:
         mkdir(lock_dir)
@@ -46,7 +46,7 @@ def update_rid_info(rid: str, sid_url: str) -> bool:
     info_file = REQUEST_INFO / rid / 'info'
     try:
         with open(temp_file, 'w') as fp:
-            fp.write(sid_url)
+            fp.write(f'{sid}|{key}')
         rename(temp_file, info_file)
         return True
     except OSError:

@@ -111,9 +111,9 @@ def request_consume(rid: str) -> str | tuple[str, int] | Any:
 
     if isfile(REQUEST_INFO / rid / 'info'):
         with open(REQUEST_INFO / rid / 'info') as fp:
-            sid_url = fp.read()
+            sid, key = fp.read().split('|')
         rmtree(REQUEST_INFO / rid)
-        return redirect(sid_url)
+        return get(sid, key)
 
     return html(f'''                                                                                                                                                                                                                  
         <h1>{_('waiting for secret')}</h1>                                                                                                                                                                                            
@@ -157,7 +157,7 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
     sid_url = f'{scheme}://{host}/get/{sid}/{key}'
 
     if rid:
-        if not update_rid_info(rid, sid_url):
+        if not update_rid_info(rid=rid, sid=sid, key=key):
             return html(f'''                                                                                                                                                                                                      
                 <h1>{_('error')}</h1>                                                                                                                                                                                             
                 <p>{_('rid missing or invalid')}</p>                                                                                                                                                                              

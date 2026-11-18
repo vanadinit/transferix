@@ -1,8 +1,5 @@
-import unicodedata
-from base64 import b64decode
 from os.path import isfile
 from shutil import rmtree
-from urllib.parse import quote
 
 from flask import jsonify, make_response, redirect, request, url_for
 
@@ -23,34 +20,29 @@ def api_new(rid: str | None = None) -> tuple[str, int]:
             'msg': 'rid invalid',
         }), 400
     try:
-        if 'data_base64' in request.json and 'filename' in request.json:
-            secret_bytes = b64decode(request.json['data_base64'])
-            filename = request.json['filename']
-        else:
-            secret_bytes = request.json['data'].encode('UTF-8')
-            filename = None
+        secret_bytes = request.json['data'].encode('UTF-8')
     except Exception:
         return jsonify({
             'status': 'error',
             'msg': 'Data missing or invalid',
         }), 400
 
-    if filename is None and len(secret_bytes.strip()) <= 0:
+    if len(secret_bytes.strip()) <= 0:
         return jsonify({
             'status': 'error',
             'msg': 'empty secret',
         }), 400
 
-    sid, key = store(secret_bytes, filename)
+    sid, key = store(secret_bytes, None)
     scheme = request.headers.get('x-forwarded-proto', 'http')
     host = request.headers.get('x-forwarded-host', request.headers['host'])
     sid_url = f'{scheme}://{host}/get/{sid}/{key}'
 
     if rid:
-        if not update_rid_info(rid, sid_url):
+        if not update_rid_info(rid=rid, sid=sid, key=key):
             return jsonify({
                 'status': 'error',
-                'msg': 'rid missing or invalid',
+                'msg': 'rid invalid',
             }), 400
 
         jsonify({
@@ -80,20 +72,10 @@ def api_reveal(sid: str, key: str) -> tuple[str, int]:
             'msg': 'wrong key',
         })
     elif filename is not None:
-        try:
-            filename.encode("ascii")
-        except UnicodeEncodeError:
-            simple = unicodedata.normalize("NFKD", filename)
-            simple = simple.encode("ascii", "ignore").decode("ascii")
-            quoted = quote(filename, safe="!#$&+-.^_`|~")
-            names = {"filename": simple, "filename*": f"UTF-8''{quoted}"}
-        else:
-            names = {"filename": filename}
-
-        response = make_response(secret_bytes, 200)
-        response.headers.set('Content-Disposition', 'attachment', **names)
-        response.headers.set('Content-Type', 'application/octet-stream')
-        return response
+        return jsonify({
+            'status': 'error',
+            'msg': 'retrieving file via API is not supported',
+        })
     else:
         secret = secret_bytes.decode('UTF-8')
         return jsonify({
@@ -119,11 +101,14 @@ def api_request() -> tuple[str, int]:
 def api_request_consume(rid: int) -> tuple[str, int]:
     if isfile(REQUEST_INFO / rid / 'info'):
         with open(REQUEST_INFO / rid / 'info') as fp:
-            sid_url = fp.read()
+            sid, key = fp.read().split('|')
         rmtree(REQUEST_INFO / rid)
+        scheme = request.headers.get('x-forwarded-proto', 'http')
+        host = request.headers.get('x-forwarded-host', request.headers['host'])
         return jsonify({
-            'status': 'ready',
-            'secret_link': sid_url,
+            'status': 'ok',
+            'secret_link': f'{scheme}://{host}/get/{sid}/{key}',
+            'secret_api_link': f'{scheme}://{host}/api/reveal/{sid}/{key}',
         }), 200
 
     return jsonify({
