@@ -62,7 +62,7 @@ def api_reveal(sid: str, key: str) -> tuple[str, int]:
         return jsonify({
             'status': 'error',
             'msg': 'already revealed',
-        }), 404
+        }), 410
     elif status == WRONG_KEY:
         return jsonify({
             'status': 'error',

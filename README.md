@@ -55,24 +55,44 @@ system to remove old directories in `$TRANSFERIX_DATA` (including those in
 `$TRANSFERIX_DATA/request_infos`) based on their mtime.
 
 
-API
----
+API reference
+-------------
 
-Post a JSON object to `/new` to create a new secret programmatically,
-this object must contain a `string` typed member called `data` holding
-your secret:
+All API endpoints accept and return `application/json`. Errors always carry
+`{"status": "error", "msg": "..."}`.
 
-    $ curl -X POST https://my.ff/api/new -H 'Content-Type: application/json' \
-        --data '{ "data": "this is my secret" }'
-    {"secret_link":"https://my.ff/get/foo/bar","status":"ok"}
+### `POST /api/new`
 
-As you can see, you’ll get a JSON response containing the secret link.
+```console
+$ curl -sS -X POST https://transferix.example/api/new \
+    -H 'Content-Type: application/json' \
+    --data '{"data": "my secret"}'
+{"secret_link": "https://transferix.example/get/ab12/…", "status": "ok"}
+```
 
-On errors, `status` will be the string `error` and there will be an
-additional field called `msg` that indicates what went wrong:
+### `POST /api/reveal/<sid>/<key>`
 
-    $ curl -X POST https://my.ff/api/new -H 'Content-Type: application/json' \
-        --data '{ "data": "" }'
-    {"msg":"empty secret","status":"error"}
+```console
+$ curl -sS -X POST https://transferix.example/api/reveal/ab12/…
+{"secret": "my secret", "status": "ok"}
+```
 
+A second call returns `410 Gone` – the secret is destroyed after the first
+successful retrieval, regardless of whether the caller processed the response.
 
+### `POST /api/request` / `POST /api/request/<rid>/consume`
+
+```console
+$ curl -sS -X POST https://transferix.example/api/request
+{"consume_link": "…/api/request/<rid>/consume",
+ "request_link": "…/<rid>",
+ "status": "added"}
+
+$ curl -sS -X POST https://transferix.example/api/request/<rid>/consume
+{"status": "waiting", "msg": "secret has not been entered yet"}
+```
+
+`request_link` is handed to the person who should send you a secret. Poll
+`consume_link` until `status` is `ok`; you then receive `secret_link` (for the
+browser) and `secret_api_link` (for `POST`-based retrieval). Polling is
+unauthenticated – anyone holding `consume_link` can fetch the secret.

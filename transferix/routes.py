@@ -207,12 +207,12 @@ def get(sid: str, key: str) -> str | tuple[str, int]:
                 <input name="compat" type="hidden" value="lynx needs this">
                 <input type="submit" value="{icon} {btn}" {btn_js}>
             </form>
-        ''')
+        '''), 200
     else:
         return html(f'''
             <h1>{_('error')}</h1>
             {_('already revealed')}
-        ''')
+        '''), 410
 
 
 @app.route('/reveal/<sid>/<key>', methods=['POST'])
@@ -224,7 +224,7 @@ def reveal(sid: str, key: str) -> str | tuple[str, int] | Any:
         return html(f'''
             <h1>{_('error')}</h1>
             {_('already revealed')}
-        '''), 404
+        '''), 410
     elif status == WRONG_KEY:
         return html(f'''
             <h1>{_('error')}</h1>
@@ -253,4 +253,4 @@ def reveal(sid: str, key: str) -> str | tuple[str, int] | Any:
             <p>{_('your secret')}</p>
             <textarea rows="{lines}" id="copytarget">{escape(secret)}</textarea>
             <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
-        '''), 410
+        '''), 200
