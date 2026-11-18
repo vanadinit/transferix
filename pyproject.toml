@@ -11,5 +11,9 @@ dependencies = [
     "pynacl",
 ]
 
+[project.optional-dependencies]
+tests = ["flake8"]
+qr = ["qrcode"]
+
 [tool.setuptools]
 packages = ["transferix"]

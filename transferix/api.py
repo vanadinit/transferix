@@ -1,7 +1,7 @@
 from os.path import isfile, isdir
 from shutil import rmtree
 
-from flask import jsonify, make_response, redirect, request, url_for
+from flask import jsonify, request, url_for
 
 from . import app
 from .crypto import store, retrieve, validate_sid, validate_key, ALREADY_REVEALED, WRONG_KEY

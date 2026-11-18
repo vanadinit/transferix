@@ -100,9 +100,9 @@ def request_secret(rid: str) -> str | tuple[str, int]:
 @app.route('/request/<rid>/consume')
 def request_consume(rid: str) -> str | tuple[str, int] | Any:
     if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
-        return html(f'''                                                                                                                                                                                                              
-            <h1>{_('error')}</h1>                                                                                                                                                                                                     
-            <p>{_('rid missing or invalid')}</p>                                                                                                                                                                                      
+        return html(f'''
+            <h1>{_('error')}</h1>
+            <p>{_('rid missing or invalid')}</p>
         '''), 400
 
     if isfile(REQUEST_INFO / rid / 'info'):
@@ -174,7 +174,7 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
 @app.route('/get/<sid>/<key>')
 def get(sid: str, key: str) -> str | tuple[str, int]:
     # Force Flask to read remaining request body bytes to avoid TCP reset issues
-    _dummy = len(request.data)
+    _dummy = len(request.data) # noqa E841
 
     validate_key(key)
     validate_sid(sid)
