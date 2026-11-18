@@ -6,8 +6,7 @@ A simple tool for transferring secrets which will self-destruct on retrieval.
 This is a fork of https://github.com/seibert-media/fluesterfix
 implementing additional features like requesting secrets and using QR-Codes.
 
-Installation
-------------
+## Installation
 
 You need:
 
@@ -20,8 +19,7 @@ You don’t need a database. However, this program expects to operate on a
 file system that guarantees POSIX semantics.
 
 
-Running
--------
+## Running
 
 For development and testing, just run:
 
@@ -55,8 +53,51 @@ system to remove old directories in `$TRANSFERIX_DATA` (including those in
 `$TRANSFERIX_DATA/request_infos`) based on their mtime.
 
 
-API reference
--------------
+## How it works
+
+**transferix** keeps everything on the file system – there is no database.
+
+```
+$TRANSFERIX_DATA/
+├── <sid>/                 one directory per stored secret
+│   ├── secret             NaCl SecretBox ciphertext
+│   └── filename           original file name (only for file uploads)
+└── request_infos/
+    └── <rid>/
+        ├── info           "<sid>|<key>" once the sender submitted
+        └── lock           short-lived lock directory
+```
+
+The encryption key is **never stored** – it exists only in the link that is
+handed to the recipient. The server cannot decrypt a secret without that link.
+Retrieval is destructive: the directory is renamed to `<sid>_locked`
+(an atomic POSIX operation) and removed after the plaintext was read, so two
+concurrent requests cannot retrieve the same secret twice.
+
+## Endpoints
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| GET    | `/`            | Form: share a text secret |
+| GET    | `/<rid>`       | Form: submit a secret into a pending request |
+| GET    | `/file`, `/file/<rid>` | Form: share a file |
+| POST   | `/new`, `/new/<rid>` | Browser form target (HTML response) |
+| GET    | `/get/<sid>/<key>` | Confirmation page ("reveal?") |
+| POST   | `/reveal/<sid>/<key>` | Destroys the secret, returns text or file |
+| GET    | `/request`     | Creates a request, redirects to `/request/<rid>` |
+| GET    | `/request/<rid>` | Shows the request link (and QR code) to the sender |
+| GET    | `/request/<rid>/consume` | Waits for / fetches the requested secret (browser) |
+| POST   | `/api/new`     | Create a secret, JSON |
+| POST   | `/api/new/<rid>` | Submit a secret into a pending request, JSON |
+| POST   | `/api/reveal/<sid>/<key>` | Retrieve a text secret, JSON |
+| POST   | `/api/request` | Create a request, JSON |
+| POST   | `/api/request/<rid>/consume` | Poll for / fetch the requested secret, JSON |
+
+> **Note:** the browser endpoints under `/new` and `/reveal` return HTML and are
+> meant for the web UI. Programmatic clients should use `/api/*` exclusively.
+
+
+## API reference
 
 All API endpoints accept and return `application/json`. Errors always carry
 `{"status": "error", "msg": "..."}`.
