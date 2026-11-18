@@ -1,8 +1,8 @@
 from base64 import b64decode, b64encode
 from os import environ, mkdir, rename
 from os.path import isdir, isfile, join
-from secrets import choice
 from re import compile as re_compile
+from secrets import choice
 from shutil import rmtree
 from string import ascii_letters, digits
 from subprocess import run
@@ -78,7 +78,7 @@ def store(secret_bytes: bytes, filename: str | None) -> tuple[str, str]:
             # Two concurrent requests cannot store data into the same
             # directory.
             sid = generate_sid()
-            mkdir(join(DATA, sid))
+            mkdir(join(DATA, sid), mode=0o700)
             break
         except FileExistsError:
             continue
