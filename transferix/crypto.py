@@ -13,7 +13,6 @@ from nacl.utils import random
 DATA = environ.get('TRANSFERIX_DATA', '/tmp')
 SID_LEN = 8
 SID_RE = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
-KEY_RE = re_compile(r'[A-Za-z0-9_-]{43}')
 
 ALREADY_REVEALED = 0
 WRONG_KEY = 1
@@ -106,7 +105,7 @@ def store(secret_bytes: bytes, filename: str | None) -> tuple[str, str]:
 def validate_key(key: str) -> None:
     # It's random bytes, there's not a lot to validate, except for the
     # length (32 bytes encoded using base64 - minus the rightmost '=').
-    if KEY_RE.fullmatch(key):
+    if len(key) != 44 - 1:
         raise ValidationError('Key validation failed')
 
 
