@@ -20,9 +20,9 @@ from .ui import html, max_size_msg
 def form_plain(rid: str | None = None) -> str | tuple[str, int]:
     if rid:
         if not is_valid_unused_rid(rid):
-            return html(f'''                                                                                                                                                                                                          
-                <h1>{_('error')}</h1>                                                                                                                                                                                                 
-                <p>{_('rid missing or invalid')}</p>                                                                                                                                                                                  
+            return html(f'''
+                <h1>{_('error')}</h1>
+                <p>{_('rid missing or invalid')}</p>
             '''), 404
         rid_param = f'/{rid}'
         rid_field = f'<input name="rid" type="hidden" value="{rid}">'
@@ -30,14 +30,14 @@ def form_plain(rid: str | None = None) -> str | tuple[str, int]:
         rid_param = ''
         rid_field = ''
 
-    return html(f'''                                                                                                                                                                                                                  
-        <h1>{_('share new secret')}</h1>                                                                                                                                                                                              
-        <p>{_('welcome desc')}</p>                                                                                                                                                                                                    
-        <p>{_('welcome maybe file').format(rid=rid_param)}{_("welcome maybe request") if not rid else ''}.</p>                                                                                                                        
-        <form action="/new" method="post">                                                                                                                                                                                            
-            <textarea name="data"></textarea>{rid_field}                                                                                                                                                                              
-            <input type="submit" value="&#x1f517; {_('create link')}">                                                                                                                                                                
-        </form>                                                                                                                                                                                                                       
+    return html(f'''
+        <h1>{_('share new secret')}</h1>
+        <p>{_('welcome desc')}</p>
+        <p>{_('welcome maybe file').format(rid=rid_param)}{_("welcome maybe request") if not rid else ''}.</p>
+        <form action="/new" method="post">
+            <textarea name="data"></textarea>{rid_field}
+            <input type="submit" value="&#x1f517; {_('create link')}">
+        </form>
     ''')
 
 
@@ -46,9 +46,9 @@ def form_plain(rid: str | None = None) -> str | tuple[str, int]:
 def form_file(rid: str | None = None) -> str | tuple[str, int]:
     if rid:
         if not is_valid_unused_rid(rid):
-            return html(f'''                                                                                                                                                                                                          
-                <h1>{_('error')}</h1>                                                                                                                                                                                                 
-                <p>{_('rid missing or invalid')}</p>                                                                                                                                                                                  
+            return html(f'''
+                <h1>{_('error')}</h1>
+                <p>{_('rid missing or invalid')}</p>
             '''), 404
         rid_param = rid
         rid_field = f'<input name="rid" type="hidden" value="{rid}">'
@@ -57,15 +57,15 @@ def form_file(rid: str | None = None) -> str | tuple[str, int]:
         rid_field = ''
 
     max_size = f'<p>{max_size_msg()}</p>'
-    return html(f'''                                                                                                                                                                                                                  
-        <h1>{_('share new file')}</h1>                                                                                                                                                                                                
-        <p>{_('welcome file')}</p>                                                                                                                                                                                                    
-        <p>{_('welcome maybe text').format(rid=rid_param)}{_("welcome maybe request") if not rid else ''}.</p>                                                                                                                        
-        {max_size}                                                                                                                                                                                                                    
-        <form action="/new" method="post" enctype="multipart/form-data">                                                                                                                                                              
-            <input type="file" name="file">{rid_field}                                                                                                                                                                                
-            <input type="submit" value="&#x1f517; {_('create link')}">                                                                                                                                                                
-        </form>                                                                                                                                                                                                                       
+    return html(f'''
+        <h1>{_('share new file')}</h1>
+        <p>{_('welcome file')}</p>
+        <p>{_('welcome maybe text').format(rid=rid_param)}{_("welcome maybe request") if not rid else ''}.</p>
+        {max_size}
+        <form action="/new" method="post" enctype="multipart/form-data">
+            <input type="file" name="file">{rid_field}
+            <input type="submit" value="&#x1f517; {_('create link')}">
+        </form>
     ''')
 
 
@@ -78,9 +78,9 @@ def request_secret_init() -> Any:
 @app.route('/request/<rid>')
 def request_secret(rid: str) -> str | tuple[str, int]:
     if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
-        return html(f'''                                                                                                                                                                                                              
-            <h1>{_('error')}</h1>                                                                                                                                                                                                     
-            <p>{_('rid missing or invalid')}</p>                                                                                                                                                                                      
+        return html(f'''
+            <h1>{_('error')}</h1>
+            <p>{_('rid missing or invalid')}</p>
         '''), 404
 
     scheme = request.headers.get('x-forwarded-proto', 'http')
@@ -90,14 +90,14 @@ def request_secret(rid: str) -> str | tuple[str, int]:
 
     consume_url = url_for('request_consume', rid=rid)
 
-    return html(f'''                                                                                                                                                                                                                  
-        <h1>{_('request')}</h1>                                                                                                                                                                                                       
-        <p>{_('request desc')}</p>                                                                                                                                                                                                    
-        {qrcode_html(request_link)}                                                                                                                                                                                                                 
-        <p>Request-Link: <input id="copytarget" type="text" value="{request_link}"></p>                                                                                                                                               
-        <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>                                                                                                                                                     
-        <hr>                                                                                                                                                                                                                          
-        <p><a href="{consume_url}" class="button">{_('go to receive')}</a></p>                                                                                                                                                        
+    return html(f'''
+        <h1>{_('request')}</h1>
+        <p>{_('request desc')}</p>
+        {qrcode_html(request_link)}
+        <p>Request-Link: <input id="copytarget" type="text" value="{request_link}"></p>
+        <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
+        <hr>
+        <p><a href="{consume_url}" class="button">{_('go to receive')}</a></p>
     '''), 200
 
 
@@ -115,10 +115,10 @@ def request_consume(rid: str) -> str | tuple[str, int] | Any:
         rmtree(REQUEST_INFO / rid)
         return get(sid, key)
 
-    return html(f'''                                                                                                                                                                                                                  
-        <h1>{_('waiting for secret')}</h1>                                                                                                                                                                                            
-        <p>{_('waiting for secret desc')}</p>                                                                                                                                                                                         
-        <p><label><input type="checkbox" id="autoReloadToggle" checked> {_('autoreload')}</label></p>                                                                                                                                 
+    return html(f'''
+        <h1>{_('waiting for secret')}</h1>
+        <p>{_('waiting for secret desc')}</p>
+        <p><label><input type="checkbox" id="autoReloadToggle" checked> {_('autoreload')}</label></p>
     '''), 200
 
 
@@ -133,9 +133,9 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
 
     rid = rid or request.form.get('rid')
     if rid and not is_valid_unused_rid(rid):
-        return html(f'''                                                                                                                                                                                                      
-                    <h1>{_('error')}</h1>                                                                                                                                                                                             
-                    <p>{_('rid missing or invalid')}</p>                                                                                                                                                                              
+        return html(f'''
+                    <h1>{_('error')}</h1>
+                    <p>{_('rid missing or invalid')}</p>
                 '''), 400
 
     try:
@@ -158,22 +158,22 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
 
     if rid:
         if not update_rid_info(rid=rid, sid=sid, key=key):
-            return html(f'''                                                                                                                                                                                                      
-                <h1>{_('error')}</h1>                                                                                                                                                                                             
-                <p>{_('rid missing or invalid')}</p>                                                                                                                                                                              
+            return html(f'''
+                <h1>{_('error')}</h1>
+                <p>{_('rid missing or invalid')}</p>
             '''), 400
 
-        return html(f'''                                                                                                                                                                                                              
-            <h1>{_('rid secret stored')}</h1>                                                                                                                                                                                         
-            <p>{_('rid secret stored desc')}</p>                                                                                                                                                                                      
+        return html(f'''
+            <h1>{_('rid secret stored')}</h1>
+            <p>{_('rid secret stored desc')}</p>
         '''), 201
 
-    return html(f'''                                                                                                                                                                                                              
-            <h1>{_('share this')}</h1>                                                                                                                                                                                                
-            <p>{_('share this desc')}</p>                                                                                                                                                                                             
-            {qrcode_html(sid_url)}                                                                                                                                                                                                             
-            <p><input id="copytarget" type="text" value="{sid_url}"></p>                                                                                                                                                              
-            <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>                                                                                                                                                 
+    return html(f'''
+            <h1>{_('share this')}</h1>
+            <p>{_('share this desc')}</p>
+            {qrcode_html(sid_url)}
+            <p><input id="copytarget" type="text" value="{sid_url}"></p>
+            <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
         '''), 201
 
 
@@ -206,18 +206,18 @@ def get(sid: str, key: str) -> str | tuple[str, int]:
             btn_js = ''
             icon = '&#x1f50d;'
 
-        return html(f'''                                                                                                                                                                                                              
-            <h1>{h1}</h1>                                                                                                                                                                                                             
-            <p>{_('only once')}</p>                                                                                                                                                                                                   
-            <form id="form" action="/reveal/{sid}/{key}" method="post">                                                                                                                                                               
-                <input name="compat" type="hidden" value="lynx needs this">                                                                                                                                                           
-                <input type="submit" value="{icon} {btn}" {btn_js}>                                                                                                                                                                   
-            </form>                                                                                                                                                                                                                   
+        return html(f'''
+            <h1>{h1}</h1>
+            <p>{_('only once')}</p>
+            <form id="form" action="/reveal/{sid}/{key}" method="post">
+                <input name="compat" type="hidden" value="lynx needs this">
+                <input type="submit" value="{icon} {btn}" {btn_js}>
+            </form>
         ''')
     else:
-        return html(f'''                                                                                                                                                                                                              
-            <h1>{_('error')}</h1>                                                                                                                                                                                                     
-            {_('already revealed')}                                                                                                                                                                                                   
+        return html(f'''
+            <h1>{_('error')}</h1>
+            {_('already revealed')}
         ''')
 
 
@@ -227,14 +227,14 @@ def reveal(sid: str, key: str) -> str | tuple[str, int] | Any:
     validate_sid(sid)
     secret_bytes, filename, status = retrieve(sid, key)
     if status == ALREADY_REVEALED:
-        return html(f'''                                                                                                                                                                                                              
-            <h1>{_('error')}</h1>                                                                                                                                                                                                     
-            {_('already revealed')}                                                                                                                                                                                                   
+        return html(f'''
+            <h1>{_('error')}</h1>
+            {_('already revealed')}
         '''), 404
     elif status == WRONG_KEY:
-        return html(f'''                                                                                                                                                                                                              
-            <h1>{_('error')}</h1>                                                                                                                                                                                                     
-            <p>{_('wrong key')}</p>                                                                                                                                                                                                   
+        return html(f'''
+            <h1>{_('error')}</h1>
+            <p>{_('wrong key')}</p>
         '''), 404
     elif filename is not None:
         try:
@@ -254,9 +254,9 @@ def reveal(sid: str, key: str) -> str | tuple[str, int] | Any:
     else:
         secret = secret_bytes.decode('UTF-8')
         lines = min(len(secret.split('\n')), 100)
-        return html(f'''                                                                                                                                                                                                              
-            <h1>{_('secret')}</h1>                                                                                                                                                                                                    
-            <p>{_('your secret')}</p>                                                                                                                                                                                                 
-            <textarea rows="{lines}" id="copytarget">{escape(secret)}</textarea>                                                                                                                                                      
-            <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>                                                                                                                                                 
+        return html(f'''
+            <h1>{_('secret')}</h1>
+            <p>{_('your secret')}</p>
+            <textarea rows="{lines}" id="copytarget">{escape(secret)}</textarea>
+            <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
         '''), 410
