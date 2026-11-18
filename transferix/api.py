@@ -1,11 +1,11 @@
-from os.path import isfile
+from os.path import isfile, isdir
 from shutil import rmtree
 
 from flask import jsonify, make_response, redirect, request, url_for
 
 from . import app
 from .crypto import store, retrieve, validate_sid, validate_key, ALREADY_REVEALED, WRONG_KEY
-from .request import is_valid_unused_rid, update_rid_info, create_rid, REQUEST_INFO
+from .request import is_valid_unused_rid, update_rid_info, create_rid, REQUEST_INFO, is_valid_rid
 
 
 @app.route('/api/new', methods=['POST'])
@@ -34,9 +34,6 @@ def api_new(rid: str | None = None) -> tuple[str, int]:
         }), 400
 
     sid, key = store(secret_bytes, None)
-    scheme = request.headers.get('x-forwarded-proto', 'http')
-    host = request.headers.get('x-forwarded-host', request.headers['host'])
-    sid_url = f'{scheme}://{host}/get/{sid}/{key}'
 
     if rid:
         if not update_rid_info(rid=rid, sid=sid, key=key):
@@ -52,7 +49,7 @@ def api_new(rid: str | None = None) -> tuple[str, int]:
 
     return jsonify({
         'status': 'ok',
-        'secret_link': sid_url
+        'secret_link': url_for('get', sid=sid, key=key, _external=True),
     }), 201
 
 
@@ -87,28 +84,29 @@ def api_reveal(sid: str, key: str) -> tuple[str, int]:
 @app.route('/api/request', methods=['POST'])
 def api_request() -> tuple[str, int]:
     rid = create_rid()
-    scheme = request.headers.get('x-forwarded-proto', 'http')
-    host = request.headers.get('x-forwarded-host', request.headers['host'])
 
     return jsonify({
         'status': 'added',
-        'request_link': f'{scheme}://{host}/{rid}',
-        'consume_link': f'{scheme}://{host}/api/request/{rid}/consume',
+        'request_link': url_for('form_plain', rid=rid, _external=True),
+        'consume_link': url_for('api_request_consume', rid=rid, _external=True),
     }), 201
 
 
 @app.route('/api/request/<rid>/consume', methods=['POST'])
 def api_request_consume(rid: int) -> tuple[str, int]:
+    if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
+        jsonify({
+            'status': 'error',
+            'msg': 'rid missing or invalid',
+        }), 400
     if isfile(REQUEST_INFO / rid / 'info'):
         with open(REQUEST_INFO / rid / 'info') as fp:
             sid, key = fp.read().split('|')
         rmtree(REQUEST_INFO / rid)
-        scheme = request.headers.get('x-forwarded-proto', 'http')
-        host = request.headers.get('x-forwarded-host', request.headers['host'])
         return jsonify({
             'status': 'ok',
-            'secret_link': f'{scheme}://{host}/get/{sid}/{key}',
-            'secret_api_link': f'{scheme}://{host}/api/reveal/{sid}/{key}',
+            'secret_link': url_for('get', sid=sid, key=key, _external=True),
+            'secret_api_link': url_for('api_reveal', sid=sid, key=key, _external=True),
         }), 200
 
     return jsonify({

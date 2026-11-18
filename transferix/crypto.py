@@ -1,7 +1,7 @@
 from base64 import b64decode, b64encode
 from os import environ, mkdir, rename
 from os.path import isdir, isfile, join
-from random import choice
+from secrets import choice
 from re import compile as re_compile
 from shutil import rmtree
 from string import ascii_letters, digits
@@ -11,8 +11,9 @@ from nacl.secret import SecretBox
 from nacl.utils import random
 
 DATA = environ.get('TRANSFERIX_DATA', '/tmp')
-SID_LEN = 4
-SID_VALIDATOR = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
+SID_LEN = 8
+SID_RE = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
+KEY_RE = re_compile(r'[A-Za-z0-9_-]{43}')
 
 ALREADY_REVEALED = 0
 WRONG_KEY = 1
@@ -105,8 +106,14 @@ def store(secret_bytes: bytes, filename: str | None) -> tuple[str, str]:
 def validate_key(key: str) -> None:
     # It's random bytes, there's not a lot to validate, except for the
     # length (32 bytes encoded using base64 - minus the rightmost '=').
-    assert len(key) == 44 - 1
+    if KEY_RE.fullmatch(key):
+        raise ValidationError('Key validation failed')
 
 
 def validate_sid(sid: str) -> None:
-    assert SID_VALIDATOR.search(sid) is not None
+    if not SID_RE.fullmatch(sid):
+        raise ValidationError('SID validation failed')
+
+
+class ValidationError(Exception):
+    pass

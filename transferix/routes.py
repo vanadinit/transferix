@@ -83,11 +83,7 @@ def request_secret(rid: str) -> str | tuple[str, int]:
             <p>{_('rid missing or invalid')}</p>
         '''), 404
 
-    scheme = request.headers.get('x-forwarded-proto', 'http')
-    host = request.headers.get('x-forwarded-host', request.headers['host'])
-
-    request_link = f'{scheme}://{host}/{rid}'
-
+    request_link = url_for('form_plain', rid=rid, _external=True)
     consume_url = url_for('request_consume', rid=rid)
 
     return html(f'''
@@ -152,9 +148,7 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
         return redirect(url_for('form_plain'))
 
     sid, key = store(secret_bytes, filename)
-    scheme = request.headers.get('x-forwarded-proto', 'http')
-    host = request.headers.get('x-forwarded-host', request.headers['host'])
-    sid_url = f'{scheme}://{host}/get/{sid}/{key}'
+    sid_url = url_for('get', sid=sid, key=key, _external=True)
 
     if rid:
         if not update_rid_info(rid=rid, sid=sid, key=key):
