@@ -1,5 +1,4 @@
 import unicodedata
-from base64 import b64decode
 from os.path import isdir, isfile
 from shutil import rmtree
 from typing import Any
@@ -126,29 +125,21 @@ def request_consume(rid: str) -> str | tuple[str, int] | Any:
 @app.route('/new', methods=['POST'])
 @app.route('/new/<rid>', methods=['POST'])
 def new(rid: str | None = None) -> str | tuple[str, int] | Any:
-    rid = rid or request.form.get('rid') or (request.json.get('rid') if request.is_json else None)
-    if rid:
-        if not is_valid_unused_rid(rid):
-            if request.is_json:
-                return jsonify({
-                    'status': 'error',
-                    'msg': 'rid missing or invalid',
-                }), 400
-            else:
-                return html(f'''                                                                                                                                                                                                      
+    if request.is_json:
+        return jsonify({
+            'status': 'error',
+            'msg': 'please use API endpoint',
+        }), 400
+
+    rid = rid or request.form.get('rid')
+    if rid and not is_valid_unused_rid(rid):
+        return html(f'''                                                                                                                                                                                                      
                     <h1>{_('error')}</h1>                                                                                                                                                                                             
                     <p>{_('rid missing or invalid')}</p>                                                                                                                                                                              
                 '''), 400
 
     try:
-        if request.is_json:
-            if 'data_base64' in request.json and 'filename' in request.json:
-                secret_bytes = b64decode(request.json['data_base64'])
-                filename = request.json['filename']
-            else:
-                secret_bytes = request.json['data'].encode('UTF-8')
-                filename = None
-        elif request.form.get('data'):
+        if request.form.get('data'):
             secret_bytes = request.form['data'].encode('UTF-8')
             filename = None
         else:
@@ -158,13 +149,7 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
         return 'Garbage', 400
 
     if filename is None and len(secret_bytes.strip()) <= 0:
-        if request.is_json:
-            return jsonify({
-                'status': 'error',
-                'msg': 'empty secret',
-            }), 400
-        else:
-            return redirect(url_for('form_plain'))
+        return redirect(url_for('form_plain'))
 
     sid, key = store(secret_bytes, filename)
     scheme = request.headers.get('x-forwarded-proto', 'http')
@@ -173,29 +158,17 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
 
     if rid:
         if not update_rid_info(rid, sid_url):
-            if request.is_json:
-                return jsonify({
-                    'status': 'error',
-                    'msg': 'rid missing or invalid',
-                }), 400
-            else:
-                return html(f'''                                                                                                                                                                                                      
-                    <h1>{_('error')}</h1>                                                                                                                                                                                             
-                    <p>{_('rid missing or invalid')}</p>                                                                                                                                                                              
-                '''), 400
+            return html(f'''                                                                                                                                                                                                      
+                <h1>{_('error')}</h1>                                                                                                                                                                                             
+                <p>{_('rid missing or invalid')}</p>                                                                                                                                                                              
+            '''), 400
 
         return html(f'''                                                                                                                                                                                                              
             <h1>{_('rid secret stored')}</h1>                                                                                                                                                                                         
             <p>{_('rid secret stored desc')}</p>                                                                                                                                                                                      
         '''), 201
 
-    if request.is_json:
-        return jsonify({
-            'status': 'ok',
-            'secret_link': sid_url
-        }), 201
-    else:
-        return html(f'''                                                                                                                                                                                                              
+    return html(f'''                                                                                                                                                                                                              
             <h1>{_('share this')}</h1>                                                                                                                                                                                                
             <p>{_('share this desc')}</p>                                                                                                                                                                                             
             {qrcode_html(sid_url)}                                                                                                                                                                                                             
