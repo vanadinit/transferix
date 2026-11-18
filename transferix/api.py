@@ -42,7 +42,7 @@ def api_new(rid: str | None = None) -> tuple[str, int]:
                 'msg': 'rid invalid',
             }), 400
 
-        jsonify({
+        return jsonify({
             'status': 'ok',
             'msg': 'secret stored',
         }), 201
@@ -67,18 +67,18 @@ def api_reveal(sid: str, key: str) -> tuple[str, int]:
         return jsonify({
             'status': 'error',
             'msg': 'wrong key',
-        })
+        }), 400
     elif filename is not None:
         return jsonify({
             'status': 'error',
             'msg': 'retrieving file via API is not supported',
-        })
+        }), 400
     else:
         secret = secret_bytes.decode('UTF-8')
         return jsonify({
             'status': 'ok',
             'secret': secret,
-        }), 410
+        }), 200
 
 
 @app.route('/api/request', methods=['POST'])

@@ -34,23 +34,18 @@ def html(body: str) -> str:
 
 
 def max_size_msg() -> str:
-    max_size_env = environ.get('TRANSFERIX_MAX_FILE_SIZE')
-    if max_size_env is None:
-        return ''
-
+    max_size_env = environ.get('TRANSFERIX_MAX_FILE_SIZE', 10_000_000)
     max_size = int(max_size_env)
-    if max_size is not None:
-        for div, suff in (
-                (1_000_000_000, 'GB'),
-                (1_000_000, 'MB'),
-                (1_000, 'kB'),
-        ):
-            if max_size >= div:
-                max_size_human = f'{max_size // div} {suff}'
-                break
-        else:
-            max_size_human = f'{max_size} Bytes'
 
-        return f'{_("welcome file max")}: {max_size_human}.'
+    for div, suff in (
+            (1_000_000_000, 'GB'),
+            (1_000_000, 'MB'),
+            (1_000, 'kB'),
+    ):
+        if max_size >= div:
+            max_size_human = f'{max_size // div} {suff}'
+            break
     else:
-        return ''
+        max_size_human = f'{max_size} Bytes'
+
+    return f'{_("welcome file max")}: {max_size_human}.'

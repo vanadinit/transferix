@@ -1,4 +1,4 @@
-from os import mkdir, rename, makedirs
+from os import mkdir, rename, makedirs, rmdir
 from os.path import isdir, isfile
 from pathlib import Path
 from re import compile as re_compile
@@ -51,3 +51,5 @@ def update_rid_info(rid: str, sid: str, key: str) -> bool:
         return True
     except OSError:
         return False
+    finally:
+        rmdir(lock_dir)
