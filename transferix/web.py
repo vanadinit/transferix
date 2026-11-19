@@ -1,6 +1,5 @@
 import unicodedata
-from os.path import isdir, isfile
-from shutil import rmtree
+from os.path import isdir
 from typing import Any
 from urllib.parse import quote
 
@@ -8,11 +7,12 @@ from flask import make_response, redirect, request, url_for
 from markupsafe import escape
 
 from . import app
-from .crypto import store, retrieve, validate_key, validate_sid, secret_exists, ALREADY_REVEALED, WRONG_KEY
+from .crypto import retrieve, validate_key, validate_sid, secret_exists, ALREADY_REVEALED, WRONG_KEY
 from .errorhandler import TransferixException
 from .language import _
 from .qr import qrcode_html
-from .request import is_valid_rid, is_valid_unused_rid, create_rid, update_rid_info, REQUEST_INFO
+from .request import is_valid_rid, is_valid_unused_rid, create_rid, REQUEST_INFO
+from .secrets import new_secret, consume_secret, NotReadyYetException
 from .ui import html, max_size_msg
 
 
@@ -91,20 +91,15 @@ def request_secret(rid: str) -> str | tuple[str, int]:
 
 @app.route('/request/<rid>/consume')
 def request_consume(rid: str) -> str | tuple[str, int] | Any:
-    if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
-        raise TransferixException(msg='rid missing or invalid', status_code=400)
-
-    if isfile(REQUEST_INFO / rid / 'info'):
-        with open(REQUEST_INFO / rid / 'info') as fp:
-            sid, key = fp.read().split('|')
-        rmtree(REQUEST_INFO / rid)
+    try:
+        sid, key = consume_secret(rid=rid)
         return get(sid, key)
-
-    return html(f'''
-        <h1>{_('waiting for secret')}</h1>
-        <p>{_('waiting for secret desc')}</p>
-        <p><label><input type="checkbox" id="autoReloadToggle" checked> {_('autoreload')}</label></p>
-    '''), 200
+    except NotReadyYetException:
+        return html(f'''
+            <h1>{_('waiting for secret')}</h1>
+            <p>{_('waiting for secret desc')}</p>
+            <p><label><input type="checkbox" id="autoReloadToggle" checked> {_('autoreload')}</label></p>
+        '''), 200
 
 
 @app.route('/new', methods=['POST'])
@@ -113,33 +108,14 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
     if request.is_json:
         raise TransferixException(msg='Please use API endpoint.', status_code=400)
 
-    rid = rid or request.form.get('rid')
-    if rid and not is_valid_unused_rid(rid):
-        raise TransferixException(msg='rid missing or invalid', status_code=400)
-
-    if request.form.get('data'):
-        secret_bytes = request.form['data'].encode('UTF-8')
-        filename = None
-    else:
-        secret_bytes = request.files['file'].read()
-        filename = request.files['file'].filename
-
-    if filename is None and len(secret_bytes.strip()) <= 0:
-        return redirect(url_for('form_plain'))
-
-    sid, key = store(secret_bytes, filename)
-    sid_url = url_for('get', sid=sid, key=key, _external=True)
-
+    sid_url = new_secret(rid=rid or request.form.get('rid'), data=request.form.get('data'))
     if rid:
-        if not update_rid_info(rid=rid, sid=sid, key=key):
-            raise TransferixException(msg='rid missing or invalid', status_code=400)
-
         return html(f'''
             <h1>{_('rid secret stored')}</h1>
             <p>{_('rid secret stored desc')}</p>
         '''), 201
-
-    return html(f'''
+    else:
+        return html(f'''
             <h1>{_('share this')}</h1>
             <p>{_('share this desc')}</p>
             {qrcode_html(sid_url)}

@@ -1,12 +1,10 @@
-from os.path import isfile, isdir
-from shutil import rmtree
-
 from flask import jsonify, request, url_for, Response
 
 from . import app
-from .crypto import store, retrieve, validate_sid, validate_key, ALREADY_REVEALED, WRONG_KEY
+from .crypto import retrieve, validate_sid, validate_key, ALREADY_REVEALED, WRONG_KEY
 from .errorhandler import TransferixException
-from .request import is_valid_unused_rid, update_rid_info, create_rid, REQUEST_INFO, is_valid_rid
+from .request import create_rid
+from .secrets import new_secret, consume_secret, NotReadyYetException
 
 
 @app.route('/api/new', methods=['POST'])
@@ -14,32 +12,16 @@ from .request import is_valid_unused_rid, update_rid_info, create_rid, REQUEST_I
 def api_new(rid: str | None = None) -> tuple[Response, int]:
     if not request.is_json:
         raise TransferixException(msg='No valid JSON request', status_code=400)
-    rid = rid or request.json.get('rid')
-    if rid and not is_valid_unused_rid(rid):
-        raise TransferixException(msg='invalid rid', status_code=400)
+
     try:
-        secret_bytes = request.json['data'].encode('UTF-8')
+        sid_url = new_secret(rid=rid or request.json.get('rid'), data=request.json['data'])
     except Exception as exc:
         raise TransferixException(msg='Data missing or invalid', status_code=400) from exc
 
-    if len(secret_bytes.strip()) <= 0:
-        raise TransferixException(msg='empty secret', status_code=400)
-
-    sid, key = store(secret_bytes, None)
-
     if rid:
-        if not update_rid_info(rid=rid, sid=sid, key=key):
-            raise TransferixException(msg='invalid rid', status_code=400)
-
-        return jsonify({
-            'status': 'ok',
-            'msg': 'secret stored',
-        }), 201
-
-    return jsonify({
-        'status': 'ok',
-        'secret_link': url_for('get', sid=sid, key=key, _external=True),
-    }), 201
+        return jsonify({'status': 'ok', 'msg': 'secret stored'}), 201
+    else:
+        return jsonify({'status': 'ok', 'secret_link': sid_url}), 201
 
 
 @app.route('/api/reveal/<sid>/<key>', methods=['POST'])
@@ -73,20 +55,16 @@ def api_request() -> tuple[Response, int]:
 
 
 @app.route('/api/request/<rid>/consume', methods=['POST'])
-def api_request_consume(rid: int) -> tuple[Response, int]:
-    if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
-        raise TransferixException(msg='rid missing or invalid', status_code=400)
-    if isfile(REQUEST_INFO / rid / 'info'):
-        with open(REQUEST_INFO / rid / 'info') as fp:
-            sid, key = fp.read().split('|')
-        rmtree(REQUEST_INFO / rid)
+def api_request_consume(rid: str) -> tuple[Response, int]:
+    try:
+        sid, key = consume_secret(rid=rid)
         return jsonify({
             'status': 'ok',
             'secret_link': url_for('get', sid=sid, key=key, _external=True),
             'secret_api_link': url_for('api_reveal', sid=sid, key=key, _external=True),
         }), 200
-
-    return jsonify({
-        'status': 'waiting',
-        'msg': 'secret has not been entered yet',
-    }), 200
+    except NotReadyYetException:
+        return jsonify({
+            'status': 'waiting',
+            'msg': 'secret has not been entered yet',
+        }), 200
