@@ -46,6 +46,7 @@ Use the following environment variables:
     proxy; this variable only displays that limit. Unset by default.
 -   `$TRANSFERIX_ENABLE_QR`: Set to an arbitrary value to show QR code
     of the share links. Needs `qrcode` Python library to be installed.
+-   `$TRANSFERIX_ENABLE_API`: Set to an arbitrary value to enable API endpoints.
 
 The program does not automatically remove secrets or requests which have
 never been retrieved or consumed. You might want to install a cron job on your
@@ -74,33 +75,40 @@ Retrieval is destructive: the directory is renamed to `<sid>_locked`
 (an atomic POSIX operation) and removed after the plaintext was read, so two
 concurrent requests cannot retrieve the same secret twice.
 
-## Endpoints
+## Standard Endpoints
 
 | Method | Path | Purpose |
-| ------ | ---- | ------- |
-| GET    | `/`            | Form: share a text secret |
-| GET    | `/<rid>`       | Form: submit a secret into a pending request |
-| GET    | `/file`, `/file/<rid>` | Form: share a file |
-| POST   | `/new`, `/new/<rid>` | Browser form target (HTML response) |
-| GET    | `/get/<sid>/<key>` | Confirmation page ("reveal?") |
-| POST   | `/reveal/<sid>/<key>` | Destroys the secret, returns text or file |
-| GET    | `/request`     | Creates a request, redirects to `/request/<rid>` |
-| GET    | `/request/<rid>` | Shows the request link (and QR code) to the sender |
-| GET    | `/request/<rid>/consume` | Waits for / fetches the requested secret (browser) |
-| POST   | `/api/new`     | Create a secret, JSON |
-| POST   | `/api/new/<rid>` | Submit a secret into a pending request, JSON |
-| POST   | `/api/reveal/<sid>/<key>` | Retrieve a text secret, JSON |
-| POST   | `/api/request` | Create a request, JSON |
-| POST   | `/api/request/<rid>/consume` | Poll for / fetch the requested secret, JSON |
+|-----| ---- | ------- |
+| GET | `/`            | Form: share a text secret |
+| GET | `/<rid>`       | Form: submit a secret into a pending request |
+| GET | `/file`, `/file/<rid>` | Form: share a file |
+| POST | `/new`, `/new/<rid>` | Browser form target (HTML response) |
+| GET | `/get/<sid>/<key>` | Confirmation page ("reveal?") |
+| POST | `/reveal/<sid>/<key>` | Destroys the secret, returns text or file |
+| GET | `/request`     | Creates a request, redirects to `/request/<rid>` |
+| GET | `/request/<rid>` | Shows the request link (and QR code) to the sender |
+| GET | `/request/<rid>/consume` | Waits for / fetches the requested secret (browser) |
 
 > **Note:** the browser endpoints under `/new` and `/reveal` return HTML and are
-> meant for the web UI. Programmatic clients should use `/api/*` exclusively.
+> meant for the web UI. Programmatic clients should use `/api/*` (see below) exclusively.
 
 
 ## API reference
 
+To enable the API set the environment variable `$TRANSFERIX_ENABLE_API`.
+
 All API endpoints accept and return `application/json`. Errors always carry
 `{"status": "error", "msg": "..."}`.
+
+
+| Method | Path | Purpose |
+|-----| ---- | ------- |
+| POST | `/api/new`     | Create a secret, JSON |
+| POST | `/api/new/<rid>` | Submit a secret into a pending request, JSON |
+| POST | `/api/reveal/<sid>/<key>` | Retrieve a text secret, JSON |
+| POST | `/api/request` | Create a request, JSON |
+| POST | `/api/request/<rid>/consume` | Poll for / fetch the requested secret, JSON |
+
 
 ### `POST /api/new`
 
