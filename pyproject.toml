@@ -9,6 +9,7 @@ requires-python = ">=3.10"
 dependencies = [
     "Flask",
     "pynacl",
+    "werkzeug",
 ]
 
 [project.optional-dependencies]

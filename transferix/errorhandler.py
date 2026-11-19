@@ -1,4 +1,5 @@
 from flask import jsonify, request
+from werkzeug.exceptions import HTTPException
 
 from . import app
 from .language import _
@@ -12,15 +13,21 @@ class TransferixException(Exception):
 
 
 @app.errorhandler(TransferixException)
-def handle_exception(e: TransferixException):
+def handle_transferix_exception(e: TransferixException):
     if request.is_json:
         return jsonify({'status': 'error', 'msg': e.msg}), e.status_code
     else:
         return html(f'<h1>{_("error")}</h1><p>{_(e.msg)}</p>'), e.status_code
 
 
+@app.errorhandler(HTTPException)
+def handle_http_exception(e: HTTPException):
+    return e
+
+
 @app.errorhandler(Exception)
-def handle_exception(e: Exception):
+def handle_unknown_exception(e: Exception):
+    app.logger.exception('Unhandled error')
     if request.is_json:
         return jsonify({'status': 'error', 'msg': f'UNKNOWN Exception: {e}'}), 500
     else:
