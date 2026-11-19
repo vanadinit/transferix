@@ -16,7 +16,7 @@ def handle_exception(e: TransferixException):
     if request.is_json:
         return jsonify({'status': 'error', 'msg': e.msg}), e.status_code
     else:
-        return html(f'<h1>{_('error')}</h1><p>{_(e.msg)}</p>'), e.status_code
+        return html(f'<h1>{_("error")}</h1><p>{_(e.msg)}</p>'), e.status_code
 
 
 @app.errorhandler(Exception)
