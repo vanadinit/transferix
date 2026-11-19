@@ -4,11 +4,12 @@ from shutil import rmtree
 from typing import Any
 from urllib.parse import quote
 
-from flask import jsonify, make_response, redirect, request, url_for
+from flask import make_response, redirect, request, url_for
 from markupsafe import escape
 
 from . import app
 from .crypto import store, retrieve, validate_key, validate_sid, secret_exists, ALREADY_REVEALED, WRONG_KEY
+from .errorhandler import TransferixException
 from .language import _
 from .qr import qrcode_html
 from .request import is_valid_rid, is_valid_unused_rid, create_rid, update_rid_info, REQUEST_INFO
@@ -20,10 +21,7 @@ from .ui import html, max_size_msg
 def form_plain(rid: str | None = None) -> str | tuple[str, int]:
     if rid:
         if not is_valid_unused_rid(rid):
-            return html(f'''
-                <h1>{_('error')}</h1>
-                <p>{_('rid missing or invalid')}</p>
-            '''), 404
+            raise TransferixException(msg='rid missing or invalid', status_code=400)
         rid_param = f'/{rid}'
         rid_field = f'<input name="rid" type="hidden" value="{rid}">'
     else:
@@ -46,10 +44,7 @@ def form_plain(rid: str | None = None) -> str | tuple[str, int]:
 def form_file(rid: str | None = None) -> str | tuple[str, int]:
     if rid:
         if not is_valid_unused_rid(rid):
-            return html(f'''
-                <h1>{_('error')}</h1>
-                <p>{_('rid missing or invalid')}</p>
-            '''), 404
+            raise TransferixException(msg='rid missing or invalid', status_code=400)
         rid_param = rid
         rid_field = f'<input name="rid" type="hidden" value="{rid}">'
     else:
@@ -78,10 +73,7 @@ def request_secret_init() -> Any:
 @app.route('/request/<rid>')
 def request_secret(rid: str) -> str | tuple[str, int]:
     if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
-        return html(f'''
-            <h1>{_('error')}</h1>
-            <p>{_('rid missing or invalid')}</p>
-        '''), 404
+        raise TransferixException(msg='rid missing or invalid', status_code=400)
 
     request_link = url_for('form_plain', rid=rid, _external=True)
     consume_url = url_for('request_consume', rid=rid)
@@ -100,10 +92,7 @@ def request_secret(rid: str) -> str | tuple[str, int]:
 @app.route('/request/<rid>/consume')
 def request_consume(rid: str) -> str | tuple[str, int] | Any:
     if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
-        return html(f'''
-            <h1>{_('error')}</h1>
-            <p>{_('rid missing or invalid')}</p>
-        '''), 400
+        raise TransferixException(msg='rid missing or invalid', status_code=400)
 
     if isfile(REQUEST_INFO / rid / 'info'):
         with open(REQUEST_INFO / rid / 'info') as fp:
@@ -122,27 +111,18 @@ def request_consume(rid: str) -> str | tuple[str, int] | Any:
 @app.route('/new/<rid>', methods=['POST'])
 def new(rid: str | None = None) -> str | tuple[str, int] | Any:
     if request.is_json:
-        return jsonify({
-            'status': 'error',
-            'msg': 'please use API endpoint',
-        }), 400
+        raise TransferixException(msg='Please use API endpoint.', status_code=400)
 
     rid = rid or request.form.get('rid')
     if rid and not is_valid_unused_rid(rid):
-        return html(f'''
-                    <h1>{_('error')}</h1>
-                    <p>{_('rid missing or invalid')}</p>
-                '''), 400
+        raise TransferixException(msg='rid missing or invalid', status_code=400)
 
-    try:
-        if request.form.get('data'):
-            secret_bytes = request.form['data'].encode('UTF-8')
-            filename = None
-        else:
-            secret_bytes = request.files['file'].read()
-            filename = request.files['file'].filename
-    except Exception:
-        return 'Garbage', 400
+    if request.form.get('data'):
+        secret_bytes = request.form['data'].encode('UTF-8')
+        filename = None
+    else:
+        secret_bytes = request.files['file'].read()
+        filename = request.files['file'].filename
 
     if filename is None and len(secret_bytes.strip()) <= 0:
         return redirect(url_for('form_plain'))
@@ -152,10 +132,7 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
 
     if rid:
         if not update_rid_info(rid=rid, sid=sid, key=key):
-            return html(f'''
-                <h1>{_('error')}</h1>
-                <p>{_('rid missing or invalid')}</p>
-            '''), 400
+            raise TransferixException(msg='rid missing or invalid', status_code=400)
 
         return html(f'''
             <h1>{_('rid secret stored')}</h1>
@@ -174,7 +151,7 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
 @app.route('/get/<sid>/<key>')
 def get(sid: str, key: str) -> str | tuple[str, int]:
     # Force Flask to read remaining request body bytes to avoid TCP reset issues
-    _dummy = len(request.data) # noqa E841
+    _dummy = len(request.data)  # noqa E841
 
     validate_key(key)
     validate_sid(sid)
@@ -209,10 +186,7 @@ def get(sid: str, key: str) -> str | tuple[str, int]:
             </form>
         '''), 200
     else:
-        return html(f'''
-            <h1>{_('error')}</h1>
-            {_('already revealed')}
-        '''), 410
+        raise TransferixException(msg='already revealed', status_code=410)
 
 
 @app.route('/reveal/<sid>/<key>', methods=['POST'])
@@ -221,15 +195,9 @@ def reveal(sid: str, key: str) -> str | tuple[str, int] | Any:
     validate_sid(sid)
     secret_bytes, filename, status = retrieve(sid, key)
     if status == ALREADY_REVEALED:
-        return html(f'''
-            <h1>{_('error')}</h1>
-            {_('already revealed')}
-        '''), 410
+        raise TransferixException(msg='already revealed', status_code=410)
     elif status == WRONG_KEY:
-        return html(f'''
-            <h1>{_('error')}</h1>
-            <p>{_('wrong key')}</p>
-        '''), 404
+        raise TransferixException(msg='wrong key', status_code=400)
     elif filename is not None:
         try:
             filename.encode("ascii")

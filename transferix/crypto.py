@@ -10,6 +10,8 @@ from subprocess import run
 from nacl.secret import SecretBox
 from nacl.utils import random
 
+from transferix.errorhandler import TransferixException
+
 DATA = environ.get('TRANSFERIX_DATA', '/tmp')
 SID_LEN = 8
 SID_RE = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
@@ -92,7 +94,7 @@ def store(secret_bytes: bytes, filename: str | None) -> tuple[str, str]:
 
     if filename is not None:
         if not filename.isprintable():
-            raise ValidationError('Non-printable characters in filename')
+            raise ValidationError(msg='Non-printable characters in filename', status_code=400)
         with open(join(DATA, sid, 'filename'), 'w') as fp:
             fp.write(filename)
 
@@ -109,13 +111,13 @@ def validate_key(key: str) -> None:
     # It's random bytes, there's not a lot to validate, except for the
     # length (32 bytes encoded using base64 - minus the rightmost '=').
     if len(key) != 44 - 1:
-        raise ValidationError('Key validation failed')
+        raise ValidationError(msg='Key validation failed', status_code=400)
 
 
 def validate_sid(sid: str) -> None:
     if not SID_RE.fullmatch(sid):
-        raise ValidationError('SID validation failed')
+        raise ValidationError(msg='SID validation failed', status_code=400)
 
 
-class ValidationError(Exception):
+class ValidationError(TransferixException):
     pass

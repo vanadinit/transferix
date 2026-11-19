@@ -1,46 +1,35 @@
 from os.path import isfile, isdir
 from shutil import rmtree
 
-from flask import jsonify, request, url_for
+from flask import jsonify, request, url_for, Response
 
 from . import app
 from .crypto import store, retrieve, validate_sid, validate_key, ALREADY_REVEALED, WRONG_KEY
+from .errorhandler import TransferixException
 from .request import is_valid_unused_rid, update_rid_info, create_rid, REQUEST_INFO, is_valid_rid
 
 
 @app.route('/api/new', methods=['POST'])
 @app.route('/api/new/<rid>', methods=['POST'])
-def api_new(rid: str | None = None) -> tuple[str, int]:
+def api_new(rid: str | None = None) -> tuple[Response, int]:
     if not request.is_json:
-        return 'No valid JSON request', 400
+        raise TransferixException(msg='No valid JSON request', status_code=400)
     rid = rid or request.json.get('rid')
     if rid and not is_valid_unused_rid(rid):
-        return jsonify({
-            'status': 'error',
-            'msg': 'rid invalid',
-        }), 400
+        raise TransferixException(msg='invalid rid', status_code=400)
     try:
         secret_bytes = request.json['data'].encode('UTF-8')
-    except Exception:
-        return jsonify({
-            'status': 'error',
-            'msg': 'Data missing or invalid',
-        }), 400
+    except Exception as exc:
+        raise TransferixException(msg='Data missing or invalid', status_code=400) from exc
 
     if len(secret_bytes.strip()) <= 0:
-        return jsonify({
-            'status': 'error',
-            'msg': 'empty secret',
-        }), 400
+        raise TransferixException(msg='empty secret', status_code=400)
 
     sid, key = store(secret_bytes, None)
 
     if rid:
         if not update_rid_info(rid=rid, sid=sid, key=key):
-            return jsonify({
-                'status': 'error',
-                'msg': 'rid invalid',
-            }), 400
+            raise TransferixException(msg='invalid rid', status_code=400)
 
         return jsonify({
             'status': 'ok',
@@ -54,25 +43,16 @@ def api_new(rid: str | None = None) -> tuple[str, int]:
 
 
 @app.route('/api/reveal/<sid>/<key>', methods=['POST'])
-def api_reveal(sid: str, key: str) -> tuple[str, int]:
+def api_reveal(sid: str, key: str) -> tuple[Response, int]:
     validate_key(key)
     validate_sid(sid)
     secret_bytes, filename, status = retrieve(sid, key)
     if status == ALREADY_REVEALED:
-        return jsonify({
-            'status': 'error',
-            'msg': 'already revealed',
-        }), 410
+        raise TransferixException(msg='already revealed', status_code=410)
     elif status == WRONG_KEY:
-        return jsonify({
-            'status': 'error',
-            'msg': 'wrong key',
-        }), 400
+        raise TransferixException(msg='wrong key', status_code=400)
     elif filename is not None:
-        return jsonify({
-            'status': 'error',
-            'msg': 'retrieving file via API is not supported',
-        }), 400
+        raise TransferixException(msg='retrieving file via API is not supported', status_code=400)
     else:
         secret = secret_bytes.decode('UTF-8')
         return jsonify({
@@ -82,7 +62,7 @@ def api_reveal(sid: str, key: str) -> tuple[str, int]:
 
 
 @app.route('/api/request', methods=['POST'])
-def api_request() -> tuple[str, int]:
+def api_request() -> tuple[Response, int]:
     rid = create_rid()
 
     return jsonify({
@@ -93,12 +73,9 @@ def api_request() -> tuple[str, int]:
 
 
 @app.route('/api/request/<rid>/consume', methods=['POST'])
-def api_request_consume(rid: int) -> tuple[str, int]:
+def api_request_consume(rid: int) -> tuple[Response, int]:
     if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
-        return jsonify({
-            'status': 'error',
-            'msg': 'rid missing or invalid',
-        }), 400
+        raise TransferixException(msg='rid missing or invalid', status_code=400)
     if isfile(REQUEST_INFO / rid / 'info'):
         with open(REQUEST_INFO / rid / 'info') as fp:
             sid, key = fp.read().split('|')
