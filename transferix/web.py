@@ -119,7 +119,7 @@ def new(rid: str | None = None) -> str | tuple[str, int] | Any:
             <h1>{_('share this')}</h1>
             <p>{_('share this desc')}</p>
             {qrcode_html(sid_url)}
-            <p><input id="copytarget" type="text" value="{sid_url}"></p>
+            <p><input id="copytarget" type="text" value="{sid_url}" /></p>
             <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
         '''), 201
 

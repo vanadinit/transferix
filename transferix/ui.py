@@ -14,18 +14,18 @@ def html(body: str) -> str:
     return f'''<!DOCTYPE html>
 <html lang="{get_lang()}">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0" />
         <title>{_('title')}</title>
-        <link rel="stylesheet" href="{css_url}" type="text/css">
+        <link rel="stylesheet" href="{css_url}" type="text/css" />
         <script src="{url_for('static', filename='clipboard.js')}"></script>
         <script src="{url_for('static', filename='reload.js')}"></script>
     </head>
     <body>
         <a href="/" class="headerlink">
             <picture>
-                <source srcset="{logo_dark_url}" media="(prefers-color-scheme: dark)">
-                <img src="{logo_url}" id="logo" alt="{logo_alt}">
+                <source srcset="{logo_dark_url}" media="(prefers-color-scheme: dark)" />
+                <img src="{logo_url}" id="logo" alt="{logo_alt}" />
             </picture>
         </a>
         {body}

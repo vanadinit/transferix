@@ -13,7 +13,7 @@ class TransferixException(Exception):
 
 
 def _error_response(msg: str, status_code: int):
-    if request.is_json:
+    if request.is_json or request.path.startswith('/api/'):
         return jsonify({'status': 'error', 'msg': msg}), status_code
     else:
         return html(f'<h1>{_("error")}</h1><p>{_(msg)}</p>'), status_code
