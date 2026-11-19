@@ -244,6 +244,8 @@ def reveal(sid: str, key: str) -> str | tuple[str, int] | Any:
         response = make_response(secret_bytes, 200)
         response.headers.set('Content-Disposition', 'attachment', **names)
         response.headers.set('Content-Type', 'application/octet-stream')
+        response.headers.set('X-Content-Type-Options', 'nosniff')
+        response.headers.set('Cache-Control', 'no-store')
         return response
     else:
         secret = secret_bytes.decode('UTF-8')

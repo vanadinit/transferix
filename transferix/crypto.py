@@ -13,6 +13,7 @@ from nacl.utils import random
 DATA = environ.get('TRANSFERIX_DATA', '/tmp')
 SID_LEN = 8
 SID_RE = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
+FILENAME_RE = re_compile(r'^[A-Za-z0-9. ]+$')
 
 ALREADY_REVEALED = 0
 WRONG_KEY = 1
@@ -90,6 +91,8 @@ def store(secret_bytes: bytes, filename: str | None) -> tuple[str, str]:
         fp.write(box.encrypt(secret_bytes))
 
     if filename is not None:
+        if not filename.isprintable():
+            raise ValidationError('Non-printable characters in filename')
         with open(join(DATA, sid, 'filename'), 'w') as fp:
             fp.write(filename)
 
