@@ -12,10 +12,11 @@ def new_secret(rid: str | None, data: str | None) -> str:
     if rid and not is_valid_unused_rid(rid):
         raise TransferixException(msg='rid missing or invalid', status_code=400)
 
+    filename = None
+    secret_bytes = b''
     if data:
         secret_bytes = data.encode('UTF-8')
-        filename = None
-    else:
+    elif request.files.get('file'):
         secret_bytes = request.files['file'].read()
         filename = request.files['file'].filename
 

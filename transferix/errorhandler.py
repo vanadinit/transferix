@@ -12,23 +12,24 @@ class TransferixException(Exception):
         self.status_code = status_code
 
 
+def _error_response(msg: str, status_code: int):
+    if request.is_json:
+        return jsonify({'status': 'error', 'msg': msg}), status_code
+    else:
+        return html(f'<h1>{_("error")}</h1><p>{_(msg)}</p>'), status_code
+
+
 @app.errorhandler(TransferixException)
 def handle_transferix_exception(e: TransferixException):
-    if request.is_json:
-        return jsonify({'status': 'error', 'msg': e.msg}), e.status_code
-    else:
-        return html(f'<h1>{_("error")}</h1><p>{_(e.msg)}</p>'), e.status_code
+    return _error_response(e.msg, e.status_code)
 
 
 @app.errorhandler(HTTPException)
 def handle_http_exception(e: HTTPException):
-    return e
+    return _error_response(f'{e.name}: {e.description or ""}', e.code or 500)
 
 
 @app.errorhandler(Exception)
 def handle_unknown_exception(e: Exception):
-    app.logger.exception('Unhandled error')
-    if request.is_json:
-        return jsonify({'status': 'error', 'msg': f'UNKNOWN Exception: {e}'}), 500
-    else:
-        return html(f'<h1>UNKNOWN Exception</h1><p>{e}</p>'), 500
+    app.logger.exception('Unhandled error', exc_info=e)
+    return _error_response('internal error', 500)

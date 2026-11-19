@@ -14,4 +14,4 @@ if getenv('TRANSFERIX_ENABLE_API'):
     from . import api  # noqa
 
 if __name__ == '__main__':
-    app.run(host='::')
+    app.run(host='127.0.0.1', port=5000, debug=True)
