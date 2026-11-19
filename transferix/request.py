@@ -25,11 +25,11 @@ def is_valid_unused_rid(rid: str | None) -> bool:
 
 
 def create_rid() -> str:
-    makedirs(REQUEST_INFO, exist_ok=True)
+    makedirs(REQUEST_INFO, mode=0o700, exist_ok=True)
     while True:
         try:
             rid = generate_sid(length=RID_LEN)
-            mkdir(REQUEST_INFO / rid)
+            mkdir(REQUEST_INFO / rid, mode=0o700)
             return rid
         except FileExistsError:
             continue

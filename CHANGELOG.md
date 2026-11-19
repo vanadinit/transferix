@@ -3,7 +3,9 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## next
+## next (unpublished yet)
+- Optional API endpoints
+- Security hardening
 
 ## 4.0.0 - 2026-06-18
 

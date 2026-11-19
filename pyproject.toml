@@ -17,3 +17,6 @@ qr = ["qrcode"]
 
 [tool.setuptools]
 packages = ["transferix"]
+
+[tool.setuptools.package-data]
+transferix = ["static/*"]

@@ -42,8 +42,8 @@ Use the following environment variables:
 -   `$TRANSFERIX_LABEL`: Custom alternative name for logo, defaults to
     `my company`.
 -   `$TRANSFERIX_MAX_FILE_SIZE`: Maximum allowed size (in bytes) for
-    file uploads. The actual filtering must be done in your reverse
-    proxy; this variable only displays that limit. Unset by default.
+    file uploads. Please also set this limit in your reverse proxy configuration.
+    Default is 10 MB.
 -   `$TRANSFERIX_ENABLE_QR`: Set to an arbitrary value to show QR code
     of the share links. Needs `qrcode` Python library to be installed.
 -   `$TRANSFERIX_ENABLE_API`: Set to an arbitrary value to enable API endpoints.
