@@ -1,9 +1,8 @@
 import unicodedata
-from os.path import isdir
 from typing import Any
 from urllib.parse import quote
 
-from flask import make_response, redirect, request, url_for
+from flask import make_response, request, url_for
 from markupsafe import escape
 
 from . import app
@@ -11,7 +10,7 @@ from .crypto import retrieve, validate_key, validate_sid, secret_exists, ALREADY
 from .errorhandler import TransferixException
 from .language import _
 from .qr import qrcode_html
-from .request import is_valid_rid, is_valid_unused_rid, REQUEST_INFO
+from .request import is_valid_unused_rid, REQUEST_INFO
 from .secrets import new_secret, consume_secret, NotReadyYetException
 from .ui import html, max_size_msg
 
@@ -19,6 +18,7 @@ from .ui import html, max_size_msg
 @app.route('/')
 @app.route('/<rid>')
 def form_plain(rid: str | None = None) -> str | tuple[str, int]:
+    #TODO sid weiterleiten
     if rid:
         if not is_valid_unused_rid(rid):
             raise TransferixException(msg='rid missing or invalid', status_code=400)
@@ -42,6 +42,7 @@ def form_plain(rid: str | None = None) -> str | tuple[str, int]:
 @app.route('/file')
 @app.route('/file/<rid>')
 def form_file(rid: str | None = None) -> str | tuple[str, int]:
+    # TODO sid weiterleiten
     if rid:
         if not is_valid_unused_rid(rid):
             raise TransferixException(msg='rid missing or invalid', status_code=400)
@@ -70,6 +71,8 @@ def request_secret() -> Any:
     request_link = url_for('form_plain', rid=rid, _external=True)
     consume_url = url_for('request_consume', rid=rid)
 
+    #TODO sid / key in url
+
     return html(f'''
         <h1>{_('request')}</h1>
         <p>{_('request desc')}</p>
@@ -95,13 +98,13 @@ def request_consume(rid: str) -> str | tuple[str, int] | Any:
 
 
 @app.route('/new', methods=['POST'])
-@app.route('/new/<rid>', methods=['POST'])
-def new(rid: str | None = None) -> str | tuple[str, int] | Any:
+@app.route('/new/<sid>/<key>', methods=['POST']) #TODO muss nach data
+def new(sid: str | None = None, key: str | None = None) -> str | tuple[str, int] | Any:
     if request.is_json:
         raise TransferixException(msg='Please use API endpoint.', status_code=400)
 
-    sid_url = new_secret(rid=rid or request.form.get('rid'), data=request.form.get('data'))
-    if rid:
+    sid_url = new_secret(data=request.form.get('data'), sid=sid, key=key)
+    if sid:
         return html(f'''
             <h1>{_('rid secret stored')}</h1>
             <p>{_('rid secret stored desc')}</p>

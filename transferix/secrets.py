@@ -3,15 +3,12 @@ from shutil import rmtree
 
 from flask import request, url_for
 
-from transferix.crypto import store, generate_key, generate_sid
+from transferix.crypto import store, generate_key, generate_sid, get_key_from_bytes, get_bytes_from_key
 from transferix.errorhandler import TransferixException
-from transferix.request import is_valid_unused_rid, update_rid_info, REQUEST_INFO, is_valid_rid
+from transferix.request import REQUEST_INFO, is_valid_rid
 
 
-def new_secret(rid: str | None, data: str | None) -> str:
-    if rid and not is_valid_unused_rid(rid):
-        raise TransferixException(msg='rid missing or invalid', status_code=400)
-
+def new_secret(data: str | None, sid: str | None, key: str | None) -> str:
     filename = None
     secret_bytes = b''
     if data:
@@ -23,12 +20,17 @@ def new_secret(rid: str | None, data: str | None) -> str:
     if filename is None and len(secret_bytes.strip()) <= 0:
         raise TransferixException(msg='empty secret', status_code=400)
 
-    key_bytes, key = generate_key()
-    sid = generate_sid()
-    store(sid=sid, secret_bytes=secret_bytes, key_bytes=key_bytes, filename=filename)
-    if rid and not update_rid_info(rid=rid, sid=sid, key=key):
-        raise TransferixException(msg='rid missing or invalid', status_code=400)
+    if sid and key:
+        key_bytes = get_bytes_from_key(key)
+        # TODO validate_request(sid, key)
+    elif sid is None and key is None:
+        key_bytes = generate_key()
+        key = get_key_from_bytes(key_bytes)
+        sid = generate_sid()
+    else:
+        raise TransferixException(msg='invalid parameters', status_code=400)
 
+    store(sid=sid, secret_bytes=secret_bytes, key_bytes=key_bytes, filename=filename)
     return url_for('get', sid=sid, key=key, _external=True)
 
 

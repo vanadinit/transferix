@@ -8,17 +8,17 @@ from .secrets import new_secret, consume_secret, NotReadyYetException
 
 
 @app.route('/api/new', methods=['POST'])
-@app.route('/api/new/<rid>', methods=['POST'])
-def api_new(rid: str | None = None) -> tuple[Response, int]:
+@app.route('/api/new/<sid>/<key>', methods=['POST'])
+def api_new(sid: str | None = None, key: str | None = None) -> tuple[Response, int]:
     if not request.is_json:
         raise TransferixException(msg='No valid JSON request', status_code=400)
 
     try:
-        sid_url = new_secret(rid=rid or request.json.get('rid'), data=request.json['data'])
+        sid_url = new_secret(data=request.json['data'], sid=sid, key=key)
     except Exception as exc:
         raise TransferixException(msg='Data missing or invalid', status_code=400) from exc
 
-    if rid:
+    if sid:
         return jsonify({'status': 'ok', 'msg': 'secret stored'}), 201
     else:
         return jsonify({'status': 'ok', 'secret_link': sid_url}), 201

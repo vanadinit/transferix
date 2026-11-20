@@ -66,13 +66,8 @@ def retrieve(sid: str, key: str) -> tuple[bytes | None, str | None, int]:
 
     rmtree(join(DATA, locked_sid))
 
-    # Restore padding. (No point in using something like a while loop
-    # here, we checked for an explicit length earlier.)
-    key += '='
-    key = key.replace('_', '/')
-    key_bytes = b64decode(key.encode('ASCII'))
     try:
-        box = SecretBox(key_bytes)
+        box = SecretBox(get_bytes_from_key(key))
         decrypted_bytes = box.decrypt(secret_bytes)
     except Exception:
         return None, None, WRONG_KEY
@@ -83,14 +78,25 @@ def secret_exists(sid: str) -> tuple[bool, bool]:
     return isdir(join(DATA, sid)), isfile(join(DATA, sid, 'filename'))
 
 
-def generate_key() -> tuple[bytes, str]:
-    key_bytes = random(SecretBox.KEY_SIZE)
+def generate_key() -> bytes:
+    return random(SecretBox.KEY_SIZE)
+
+
+def get_key_from_bytes(key_bytes: bytes) -> str:
     # Turn key into base64 and remove padding, because it has the
     # potential of confusing users. ("Is this part of the URL?")
     key = str(b64encode(key_bytes), 'ASCII')
     key = key.replace('/', '_')
     key = key.rstrip('=')
-    return key_bytes, key
+    return key
+
+
+def get_bytes_from_key(key: str) -> bytes:
+    # Restore padding. (No point in using something like a while loop
+    # here, we checked for an explicit length earlier.)
+    key += '='
+    key = key.replace('_', '/')
+    return b64decode(key.encode('ASCII'))
 
 
 def store(sid: str, secret_bytes: bytes, key_bytes: bytes, filename: str | None):
