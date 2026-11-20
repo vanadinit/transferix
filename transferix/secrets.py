@@ -3,7 +3,7 @@ from shutil import rmtree
 
 from flask import request, url_for
 
-from transferix.crypto import store
+from transferix.crypto import store, generate_key, generate_sid
 from transferix.errorhandler import TransferixException
 from transferix.request import is_valid_unused_rid, update_rid_info, REQUEST_INFO, is_valid_rid
 
@@ -23,7 +23,9 @@ def new_secret(rid: str | None, data: str | None) -> str:
     if filename is None and len(secret_bytes.strip()) <= 0:
         raise TransferixException(msg='empty secret', status_code=400)
 
-    sid, key = store(secret_bytes, filename)
+    key_bytes, key = generate_key()
+    sid = generate_sid()
+    store(sid=sid, secret_bytes=secret_bytes, key_bytes=key_bytes, filename=filename)
     if rid and not update_rid_info(rid=rid, sid=sid, key=key):
         raise TransferixException(msg='rid missing or invalid', status_code=400)
 

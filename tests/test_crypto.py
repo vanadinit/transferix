@@ -1,10 +1,13 @@
 import pytest
-from transferix.crypto import store, retrieve, validate_key, validate_sid, OK, ALREADY_REVEALED
+from transferix.crypto import store, retrieve, validate_key, validate_sid, OK, ALREADY_REVEALED, generate_key, \
+    generate_sid
 from transferix.errorhandler import TransferixException
 
 
 def test_roundtrip():
-    sid, key = store(b'geheim', None)
+    key_bytes, key = generate_key()
+    sid = generate_sid()
+    store(sid=sid, secret_bytes=b'geheim', key_bytes=key_bytes, filename=None)
     data, filename, status = retrieve(sid, key)
     assert status == OK
     assert data == b'geheim'
@@ -12,7 +15,9 @@ def test_roundtrip():
 
 
 def test_second_retrieve_is_gone():
-    sid, key = store(b'x', None)
+    key_bytes, key = generate_key()
+    sid = generate_sid()
+    store(sid=sid, secret_bytes=b'x', key_bytes=key_bytes, filename=None)
     retrieve(sid, key)
     _, _, status = retrieve(sid, key)
     assert status == ALREADY_REVEALED

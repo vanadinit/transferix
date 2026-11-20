@@ -7,11 +7,11 @@ from flask import make_response, redirect, request, url_for
 from markupsafe import escape
 
 from . import app
-from .crypto import retrieve, validate_key, validate_sid, secret_exists, ALREADY_REVEALED, WRONG_KEY
+from .crypto import retrieve, validate_key, validate_sid, secret_exists, ALREADY_REVEALED, WRONG_KEY, generate_sid
 from .errorhandler import TransferixException
 from .language import _
 from .qr import qrcode_html
-from .request import is_valid_rid, is_valid_unused_rid, create_rid, REQUEST_INFO
+from .request import is_valid_rid, is_valid_unused_rid, REQUEST_INFO
 from .secrets import new_secret, consume_secret, NotReadyYetException
 from .ui import html, max_size_msg
 
@@ -66,7 +66,7 @@ def form_file(rid: str | None = None) -> str | tuple[str, int]:
 
 @app.route('/request')
 def request_secret_init() -> Any:
-    rid = create_rid()
+    rid = generate_sid(path=REQUEST_INFO)
     return redirect(url_for('request_secret', rid=rid))
 
 

@@ -1,9 +1,9 @@
 from flask import jsonify, request, url_for, Response
 
 from . import app
-from .crypto import retrieve, validate_sid, validate_key, ALREADY_REVEALED, WRONG_KEY
+from .crypto import retrieve, validate_sid, validate_key, ALREADY_REVEALED, WRONG_KEY, generate_sid
 from .errorhandler import TransferixException
-from .request import create_rid
+from .request import REQUEST_INFO
 from .secrets import new_secret, consume_secret, NotReadyYetException
 
 
@@ -45,7 +45,7 @@ def api_reveal(sid: str, key: str) -> tuple[Response, int]:
 
 @app.route('/api/request', methods=['POST'])
 def api_request() -> tuple[Response, int]:
-    rid = create_rid()
+    rid = generate_sid(path=REQUEST_INFO)
 
     return jsonify({
         'status': 'added',

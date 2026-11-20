@@ -6,7 +6,7 @@ from re import compile as re_compile
 from .crypto import DATA, generate_sid
 
 REQUEST_INFO = Path(DATA) / 'request_infos'
-RID_LEN = 27
+RID_LEN = 8
 RID_VALIDATOR = re_compile(f'^[A-Za-z0-9]{{{RID_LEN}}}$')
 
 
@@ -22,17 +22,6 @@ def is_valid_unused_rid(rid: str | None) -> bool:
     if isfile(REQUEST_INFO / rid / 'info'):
         return False
     return True
-
-
-def create_rid() -> str:
-    makedirs(REQUEST_INFO, mode=0o700, exist_ok=True)
-    while True:
-        try:
-            rid = generate_sid(length=RID_LEN)
-            mkdir(REQUEST_INFO / rid, mode=0o700)
-            return rid
-        except FileExistsError:
-            continue
 
 
 def update_rid_info(rid: str, sid: str, key: str) -> bool:

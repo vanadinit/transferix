@@ -1,5 +1,5 @@
 from base64 import b64decode, b64encode
-from os import environ, mkdir, rename
+from os import environ, mkdir, rename, makedirs
 from os.path import isdir, isfile, join
 from re import compile as re_compile
 from secrets import choice
@@ -15,6 +15,7 @@ from transferix.errorhandler import TransferixException
 DATA = environ.get('TRANSFERIX_DATA', '/tmp')
 SID_LEN = 8
 SID_RE = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
+SID_POOL = ascii_letters + digits
 FILENAME_RE = re_compile(r'^[A-Za-z0-9. ]+$')
 
 ALREADY_REVEALED = 0
@@ -22,12 +23,20 @@ WRONG_KEY = 1
 OK = 2
 
 
-def generate_sid(length: int = SID_LEN) -> str:
-    pool = ascii_letters + digits
-    sid = ''
-    for i in range(length):
-        sid += choice(pool)
-    return sid
+def generate_sid(length: int = SID_LEN, path: str = DATA) -> str:
+    makedirs(path, mode=0o700, exist_ok=True)
+    while True:
+        try:
+            # Again, mkdir is an atomic operation on POSIX file systems.
+            # Two concurrent requests cannot store data into the same
+            # directory.
+            sid = ''
+            for i in range(length):
+                sid += choice(SID_POOL)
+            mkdir(join(path, sid), mode=0o700)
+            return sid
+        except FileExistsError:
+            continue
 
 
 def retrieve(sid: str, key: str) -> tuple[bytes | None, str | None, int]:
@@ -74,19 +83,17 @@ def secret_exists(sid: str) -> tuple[bool, bool]:
     return isdir(join(DATA, sid)), isfile(join(DATA, sid, 'filename'))
 
 
-def store(secret_bytes: bytes, filename: str | None) -> tuple[str, str]:
-    while True:
-        try:
-            # Again, mkdir is an atomic operation on POSIX file systems.
-            # Two concurrent requests cannot store data into the same
-            # directory.
-            sid = generate_sid()
-            mkdir(join(DATA, sid), mode=0o700)
-            break
-        except FileExistsError:
-            continue
-
+def generate_key() -> tuple[bytes, str]:
     key_bytes = random(SecretBox.KEY_SIZE)
+    # Turn key into base64 and remove padding, because it has the
+    # potential of confusing users. ("Is this part of the URL?")
+    key = str(b64encode(key_bytes), 'ASCII')
+    key = key.replace('/', '_')
+    key = key.rstrip('=')
+    return key_bytes, key
+
+
+def store(sid: str, secret_bytes: bytes, key_bytes: bytes, filename: str | None):
     box = SecretBox(key_bytes)
 
     with open(join(DATA, sid, 'secret'), 'wb') as fp:
@@ -97,14 +104,6 @@ def store(secret_bytes: bytes, filename: str | None) -> tuple[str, str]:
             raise ValidationError(msg='Non-printable characters in filename', status_code=400)
         with open(join(DATA, sid, 'filename'), 'w') as fp:
             fp.write(filename)
-
-    # Turn key into base64 and remove padding, because it has the
-    # potential of confusing users. ("Is this part of the URL?")
-    key = str(b64encode(key_bytes), 'ASCII')
-    key = key.replace('/', '_')
-    key = key.rstrip('=')
-
-    return sid, key
 
 
 def validate_key(key: str) -> None:
