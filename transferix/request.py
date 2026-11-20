@@ -1,9 +1,9 @@
-from os import mkdir, rename, makedirs, rmdir
+from os import mkdir, rename, rmdir
 from os.path import isdir, isfile
 from pathlib import Path
 from re import compile as re_compile
 
-from .crypto import DATA, generate_sid
+from .crypto import DATA
 
 REQUEST_INFO = Path(DATA) / 'request_infos'
 RID_LEN = 8

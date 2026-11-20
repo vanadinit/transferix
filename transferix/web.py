@@ -65,16 +65,8 @@ def form_file(rid: str | None = None) -> str | tuple[str, int]:
 
 
 @app.route('/request')
-def request_secret_init() -> Any:
+def request_secret() -> Any:
     rid = generate_sid(path=REQUEST_INFO)
-    return redirect(url_for('request_secret', rid=rid))
-
-
-@app.route('/request/<rid>')
-def request_secret(rid: str) -> str | tuple[str, int]:
-    if not is_valid_rid(rid) or not isdir(REQUEST_INFO / rid):
-        raise TransferixException(msg='rid missing or invalid', status_code=400)
-
     request_link = url_for('form_plain', rid=rid, _external=True)
     consume_url = url_for('request_consume', rid=rid)
 
