@@ -17,8 +17,8 @@ def _safe_write(directory: Path, filename: str, content: str):
     lock_dir = directory / 'lock'
     try:
         mkdir(lock_dir)
-    except FileExistsError as e:
-        raise WriteFailure(msg='Lock directory exists', status_code=400) from e
+    except FileExistsError as exc:
+        raise WriteFailure(msg='Lock directory exists', status_code=409) from exc
 
     temp_file = directory / f'{filename}.tmp'
     main_file = directory / filename
@@ -26,10 +26,15 @@ def _safe_write(directory: Path, filename: str, content: str):
         with open(temp_file, 'w') as fp:
             fp.write(content)
         rename(temp_file, main_file)
-    except OSError as e:
-        raise WriteFailure(msg='Writing file failed', status_code=400) from e
+    except OSError as exc:
+        raise WriteFailure(msg='Writing file failed', status_code=409) from exc
     finally:
         rmdir(lock_dir)
+
+
+def get_request_status(sid: str) -> str:
+    with open(REQUEST_INFO / sid / 'status') as f:
+        return f.read()
 
 
 def generate_request_token(sid: str) -> str:
@@ -38,17 +43,19 @@ def generate_request_token(sid: str) -> str:
     return token
 
 
-def validate_request(sid: str | None):
+def validate_request(sid: str | None, status: str):
     if sid is None:
         raise ValidationError(msg='sid missing', status_code=400)
     validate_sid(sid)
     if not isdir(REQUEST_INFO / sid) or not isfile(REQUEST_INFO / sid / 'status'):
         raise ValidationError(msg='invalid secret ID', status_code=400)
+    if get_request_status(sid) != status:
+        raise RequestStateException(msg='request is in wrong state', status_code=409)
 
 
 def get_request_strs(sid: str | None, key: str | None) -> tuple[str, str]:
     if sid and key:
-        validate_request(sid=sid)
+        validate_request(sid=sid, status=RequestStatus.INIT)
         request_path = f'/{sid}/{key}'
         request_fields = f'<input name="sid" type="hidden" value="{sid}"><input name="key" type="hidden" value="{key}">'
     else:
@@ -63,4 +70,8 @@ def update_request_status(sid: str, status: str):
 
 
 class WriteFailure(TransferixException):
+    pass
+
+
+class RequestStateException(TransferixException):
     pass

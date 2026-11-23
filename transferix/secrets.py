@@ -3,7 +3,7 @@ from flask import request, url_for
 from transferix.crypto import store, generate_key, generate_sid, get_key_from_bytes, get_bytes_from_key, \
     ValidationError, validate_sid, REQUEST_INFO
 from transferix.errorhandler import TransferixException
-from transferix.request import validate_request, update_request_status, RequestStatus
+from transferix.request import validate_request, update_request_status, RequestStatus, RequestStateException
 
 
 def new_secret(data: str | None, sid: str | None, key: str | None) -> str:
@@ -21,7 +21,7 @@ def new_secret(data: str | None, sid: str | None, key: str | None) -> str:
     if sid and key:
         is_request = True
         key_bytes = get_bytes_from_key(key)
-        validate_request(sid=sid)
+        validate_request(sid=sid, status=RequestStatus.INIT)
     elif sid is None and key is None:
         is_request = False
         key_bytes = generate_key()
@@ -42,8 +42,8 @@ def validate_reveal(sid: str, token: str | None = None) -> bool:
         try:
             with open(REQUEST_INFO / sid / 'token', 'r') as fp:
                 request_token = fp.read()
-        except Exception as e:
-            raise ValidationError(msg='invalid secret token', status_code=400) from e
+        except Exception as exc:
+            raise ValidationError(msg='invalid secret token', status_code=400) from exc
         if token is None or request_token != token:
             raise ValidationError(msg='invalid secret token', status_code=400)
         return True
@@ -52,13 +52,10 @@ def validate_reveal(sid: str, token: str | None = None) -> bool:
 
 
 def secret_ready(sid: str, token: str) -> bool:
-    validate_request(sid=sid)
+    try:
+        validate_request(sid=sid, status=RequestStatus.STORED)
+    except RequestStateException:
+        return False
     validate_reveal(sid=sid, token=token)
 
-    with open(REQUEST_INFO / sid / 'status') as fp:
-        status = fp.read()
-
-    if status == RequestStatus.STORED:
-        return True
-
-    return False
+    return True

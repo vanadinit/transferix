@@ -110,13 +110,16 @@ def get_bytes_from_key(key: str) -> bytes:
 def store(sid: str, secret_bytes: bytes, key_bytes: bytes, filename: str | None):
     box = SecretBox(key_bytes)
 
-    with open(join(DATA, sid, 'secret'), 'wb') as fp:
-        fp.write(box.encrypt(secret_bytes))
+    try:
+        with open(DATA / sid / 'secret', 'xb') as fp:
+            fp.write(box.encrypt(secret_bytes))
+    except FileExistsError as exc:
+        raise TransferixException(msg='secret already stored', status_code=409) from exc
 
     if filename is not None:
         if not filename.isprintable():
             raise ValidationError(msg='Non-printable characters in filename', status_code=400)
-        with open(join(DATA, sid, 'filename'), 'w') as fp:
+        with open(DATA / sid / 'filename', 'w') as fp:
             fp.write(filename)
 
 
