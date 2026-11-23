@@ -29,8 +29,8 @@ def api_new() -> tuple[Response, int]:
 
     try:
         sid_url = new_secret(data=request.json['data'], sid=sid, key=key)
-    except Exception as exc:
-        raise TransferixException(msg='Data missing or invalid', status_code=400) from exc
+    except KeyError as exc:
+        raise TransferixException(msg='Data missing', status_code=400) from exc
 
     if sid:
         return jsonify({'status': 'ok', 'msg': 'secret stored'}), 201

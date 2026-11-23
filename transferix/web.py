@@ -17,9 +17,9 @@ from .ui import html, max_size_msg
 
 
 @app.route('/')
-@app.route('/<sid>/<key>')
+@app.route('/r/<sid>/<key>')
 def form_plain(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
-    request_path, request_fields = get_request_strs(sid=sid, key=key)
+    request_path, request_fields = get_request_strs(sid=sid, key=key, target='form_file')
 
     return html(f'''
         <h1>{_('share new secret')}</h1>
@@ -35,13 +35,13 @@ def form_plain(sid: str | None = None, key: str | None = None) -> str | tuple[st
 @app.route('/file')
 @app.route('/file/<sid>/<key>')
 def form_file(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
-    request_path, request_fields = get_request_strs(sid=sid, key=key)
+    request_path, request_fields = get_request_strs(sid=sid, key=key, target='form_plain')
 
     max_size = f'<p>{max_size_msg()}</p>'
     return html(f'''
         <h1>{_('share new file')}</h1>
         <p>{_('welcome file')}</p>
-        <p>{_('welcome maybe text').format(request_path=request_path.lstrip('/'))}{_("welcome maybe request") if not request_path else ''}.</p>
+        <p>{_('welcome maybe text').format(request_path=request_path)}{_("welcome maybe request") if not request_path else ''}.</p>
         {max_size}
         <form action="/new" method="post" enctype="multipart/form-data">
             <input type="file" name="file">{request_fields}

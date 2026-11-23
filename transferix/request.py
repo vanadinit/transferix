@@ -2,6 +2,7 @@ from os import rename
 from pathlib import Path
 from secrets import token_urlsafe
 
+from flask import url_for
 from markupsafe import escape
 
 from .crypto import validate_sid, ValidationError, REQUEST_INFO, DATA
@@ -44,14 +45,14 @@ def validate_request(sid: str | None, status: str):
         raise TransferixException(msg='Programming error. Please notify developers.', status_code=500)
 
 
-def get_request_strs(sid: str | None, key: str | None) -> tuple[str, str]:
+def get_request_strs(sid: str | None, key: str | None, target: str) -> tuple[str, str]:
     if sid and key:
         validate_request(sid=sid, status='init')
-        request_path = f'/{escape(sid)}/{escape(key)}'
+        request_path = url_for(target, sid=sid, key=key)
         request_fields = (f'<input name="sid" type="hidden" value="{escape(sid)}">'
                           f'<input name="key" type="hidden" value="{escape(key)}">')
     else:
-        request_path = ''
+        request_path = url_for(target)
         request_fields = ''
 
     return request_path, request_fields
