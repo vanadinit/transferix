@@ -18,7 +18,6 @@ REQUEST_INFO = DATA / 'request_infos'
 SID_LEN = 8
 SID_RE = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
 SID_POOL = ascii_letters + digits
-FILENAME_RE = re_compile(r'^[A-Za-z0-9. ]+$')
 
 ALREADY_REVEALED = 0
 WRONG_KEY = 1
@@ -119,7 +118,7 @@ def store(sid: str, secret_bytes: bytes, key_bytes: bytes, filename: str | None)
         if not filename.isprintable():
             raise ValidationError(msg='Non-printable characters in filename', status_code=400)
         with open(DATA / sid / 'filename', 'w') as fp:
-            fp.write(filename)
+            fp.write(filename)  #TODO encrypt filename?
 
 
 def validate_key(key: str) -> None:

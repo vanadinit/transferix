@@ -1,7 +1,7 @@
 from flask import request, url_for
 
 from transferix.crypto import store, generate_key, generate_sid, get_key_from_bytes, get_bytes_from_key, \
-    ValidationError, validate_sid, REQUEST_INFO
+    ValidationError, validate_sid, REQUEST_INFO, validate_key
 from transferix.errorhandler import TransferixException
 from transferix.request import validate_request, update_request_status, RequestStatus, RequestStateException
 
@@ -20,8 +20,9 @@ def new_secret(data: str | None, sid: str | None, key: str | None) -> str:
 
     if sid and key:
         is_request = True
-        key_bytes = get_bytes_from_key(key)
         validate_request(sid=sid, status=RequestStatus.INIT)
+        validate_key(key)
+        key_bytes = get_bytes_from_key(key)
     elif sid is None and key is None:
         is_request = False
         key_bytes = generate_key()
