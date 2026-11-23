@@ -1,6 +1,5 @@
 from base64 import b64decode, b64encode
 from os import environ, mkdir, rename, makedirs
-from os.path import isdir, isfile, join
 from pathlib import Path
 from re import compile as re_compile
 from secrets import choice
@@ -53,24 +52,24 @@ def retrieve(sid: str, key: str) -> tuple[bytes | None, str | None, int]:
     # case where we try to retrieve an invalid sid.
     locked_sid = sid + '_locked'
     try:
-        rename(join(DATA, sid), join(DATA, locked_sid))
+        rename(DATA / sid, DATA / locked_sid)
     except OSError:
         return None, None, ALREADY_REVEALED
 
     # Now that we have "locked" this sid, we can safely read it and then
     # destroy it.
-    with open(join(DATA, locked_sid, 'secret'), 'rb') as fp:
+    with open(DATA / locked_sid / 'secret', 'rb') as fp:
         secret_bytes = fp.read()
-    run(['/usr/bin/shred', join(DATA, locked_sid, 'secret')])
+    run(['/usr/bin/shred', DATA / locked_sid / 'secret'])
 
     try:
-        with open(join(DATA, locked_sid, 'filename'), 'r') as fp:
+        with open(DATA / locked_sid / 'filename', 'r') as fp:
             filename = fp.read()
-        run(['/usr/bin/shred', join(DATA, locked_sid, 'filename')])
+        run(['/usr/bin/shred', DATA / locked_sid / 'filename'])
     except FileNotFoundError:
         filename = None
 
-    rmtree(join(DATA, locked_sid))
+    rmtree(DATA / locked_sid)
 
     try:
         box = SecretBox(get_bytes_from_key(key))
@@ -81,9 +80,9 @@ def retrieve(sid: str, key: str) -> tuple[bytes | None, str | None, int]:
 
 
 def secret_exists_as_file(sid: str) -> bool:
-    if not isdir(join(DATA, sid)):
+    if not (DATA / sid).is_dir():
         raise TransferixException(msg='already revealed', status_code=410)
-    return isfile(join(DATA, sid, 'filename'))
+    return (DATA / sid / 'filename').is_file()
 
 
 def generate_key() -> bytes:
