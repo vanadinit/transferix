@@ -124,7 +124,7 @@ def get(sid: str, key: str, token: str | None = None) -> str | tuple[str, int]:
     validate_key(key)
     validate_sid(sid)
 
-    hidden_token_str = f'<input name="token" type="hidden" value="{token}">' if token else ''
+    hidden_token_str = f'<input name="token" type="hidden" value="{escape(token)}">' if token else ''
 
     if secret_exists_as_file(sid):
         h1 = _('download?')
@@ -151,8 +151,8 @@ def get(sid: str, key: str, token: str | None = None) -> str | tuple[str, int]:
         <p>{_('only once')}</p>
         <form id="form" action="/reveal" method="post">
             <input name="compat" type="hidden" value="lynx needs this">
-            <input name="sid" type="hidden" value="{sid}">
-            <input name="key" type="hidden" value="{key}">
+            <input name="sid" type="hidden" value="{escape(sid)}">
+            <input name="key" type="hidden" value="{escape(key)}">
             {hidden_token_str}
             <input type="submit" value="{icon} {btn}" {btn_js}>
         </form>

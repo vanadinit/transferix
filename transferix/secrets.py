@@ -3,7 +3,8 @@ from flask import request, url_for
 from transferix.crypto import store, generate_key, generate_sid, get_key_from_bytes, get_bytes_from_key, \
     ValidationError, validate_sid, REQUEST_INFO, validate_key
 from transferix.errorhandler import TransferixException
-from transferix.request import validate_request, update_request_status, RequestStatus, RequestStateException
+from transferix.request import validate_request, update_request_status, RequestStatus, RequestStateException, \
+    get_request_status
 
 
 def new_secret(data: str | None, sid: str | None, key: str | None) -> str:
@@ -47,6 +48,8 @@ def validate_reveal(sid: str, token: str | None = None) -> bool:
             raise ValidationError(msg='invalid secret token', status_code=400) from exc
         if token is None or request_token != token:
             raise ValidationError(msg='invalid secret token', status_code=400)
+        if get_request_status(sid) != RequestStatus.STORED:
+            raise RequestStateException(msg='no secret stored', status_code=400)
         return True
     else:
         return False
