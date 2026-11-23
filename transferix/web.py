@@ -6,60 +6,45 @@ from flask import make_response, request, url_for
 from markupsafe import escape
 
 from . import app
-from .crypto import retrieve, validate_key, validate_sid, secret_exists, ALREADY_REVEALED, WRONG_KEY, generate_sid
+from .crypto import retrieve, validate_key, validate_sid, secret_exists_as_file, ALREADY_REVEALED, WRONG_KEY, \
+    generate_sid, generate_key, get_key_from_bytes
 from .errorhandler import TransferixException
 from .language import _
 from .qr import qrcode_html
-from .request import is_valid_unused_rid, REQUEST_INFO
-from .secrets import new_secret, consume_secret, NotReadyYetException
+from .request import get_request_strs, generate_request_token, update_request_status, RequestStatus
+from .secrets import new_secret, validate_reveal, secret_ready
 from .ui import html, max_size_msg
 
 
 @app.route('/')
-@app.route('/<rid>')
-def form_plain(rid: str | None = None) -> str | tuple[str, int]:
-    #TODO sid weiterleiten
-    if rid:
-        if not is_valid_unused_rid(rid):
-            raise TransferixException(msg='rid missing or invalid', status_code=400)
-        rid_param = f'/{rid}'
-        rid_field = f'<input name="rid" type="hidden" value="{rid}">'
-    else:
-        rid_param = ''
-        rid_field = ''
+@app.route('/<sid>/<key>')
+def form_plain(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
+    request_path, request_fields = get_request_strs(sid=sid, key=key)
 
     return html(f'''
         <h1>{_('share new secret')}</h1>
         <p>{_('welcome desc')}</p>
-        <p>{_('welcome maybe file').format(rid=rid_param)}{_("welcome maybe request") if not rid else ''}.</p>
+        <p>{_('welcome maybe file').format(request_path=request_path)}{_("welcome maybe request") if not request_path else ''}.</p>
         <form action="/new" method="post">
-            <textarea name="data"></textarea>{rid_field}
+            <textarea name="data"></textarea>{request_fields}
             <input type="submit" value="&#x1f517; {_('create link')}">
         </form>
     ''')
 
 
 @app.route('/file')
-@app.route('/file/<rid>')
-def form_file(rid: str | None = None) -> str | tuple[str, int]:
-    # TODO sid weiterleiten
-    if rid:
-        if not is_valid_unused_rid(rid):
-            raise TransferixException(msg='rid missing or invalid', status_code=400)
-        rid_param = rid
-        rid_field = f'<input name="rid" type="hidden" value="{rid}">'
-    else:
-        rid_param = ''
-        rid_field = ''
+@app.route('/file/<sid>/<key>')
+def form_file(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
+    request_path, request_fields = get_request_strs(sid=sid, key=key)
 
     max_size = f'<p>{max_size_msg()}</p>'
     return html(f'''
         <h1>{_('share new file')}</h1>
         <p>{_('welcome file')}</p>
-        <p>{_('welcome maybe text').format(rid=rid_param)}{_("welcome maybe request") if not rid else ''}.</p>
+        <p>{_('welcome maybe text').format(request_path=request_path.lstrip('/'))}{_("welcome maybe request") if not request_path else ''}.</p>
         {max_size}
         <form action="/new" method="post" enctype="multipart/form-data">
-            <input type="file" name="file">{rid_field}
+            <input type="file" name="file">{request_fields}
             <input type="submit" value="&#x1f517; {_('create link')}">
         </form>
     ''')
@@ -67,11 +52,11 @@ def form_file(rid: str | None = None) -> str | tuple[str, int]:
 
 @app.route('/request')
 def request_secret() -> Any:
-    rid = generate_sid(path=REQUEST_INFO)
-    request_link = url_for('form_plain', rid=rid, _external=True)
-    consume_url = url_for('request_consume', rid=rid)
-
-    #TODO sid / key in url
+    sid = generate_sid(is_request=True)
+    key = get_key_from_bytes(generate_key())
+    token = generate_request_token(sid)
+    update_request_status(sid=sid, status=RequestStatus.INIT)
+    request_link = url_for('form_plain', sid=sid, key=key, _external=True)
 
     return html(f'''
         <h1>{_('request')}</h1>
@@ -80,16 +65,26 @@ def request_secret() -> Any:
         <p>Request-Link: <input id="copytarget" type="text" value="{request_link}"></p>
         <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
         <hr>
-        <p><a href="{consume_url}" class="button">{_('go to receive')}</a></p>
+        <p>
+        <form action="/request/consume" method="post" enctype="multipart/form-data">
+            <input type="submit" value="&#x1f517; {_('go to receive')}">
+            <input name="sid" type="hidden" value="{sid}">
+            <input name="key" type="hidden" value="{key}">
+            <input name="token" type="hidden" value="{token}">
+        </form>
+        </p>
     '''), 200
 
 
-@app.route('/request/<rid>/consume')
-def request_consume(rid: str) -> str | tuple[str, int] | Any:
-    try:
-        sid, key = consume_secret(rid=rid)
-        return get(sid, key)
-    except NotReadyYetException:
+@app.route('/request/consume', methods=['POST'])
+def request_consume() -> Any:
+    sid = request.form['sid']
+    key = request.form['key']
+    token = request.form['token']
+
+    if secret_ready(sid=sid, token=token):
+        return get(sid=sid, key=key, token=token)
+    else:
         return html(f'''
             <h1>{_('waiting for secret')}</h1>
             <p>{_('waiting for secret desc')}</p>
@@ -98,10 +93,11 @@ def request_consume(rid: str) -> str | tuple[str, int] | Any:
 
 
 @app.route('/new', methods=['POST'])
-@app.route('/new/<sid>/<key>', methods=['POST']) #TODO muss nach data
-def new(sid: str | None = None, key: str | None = None) -> str | tuple[str, int] | Any:
+def new() -> str | tuple[str, int] | Any:
     if request.is_json:
         raise TransferixException(msg='Please use API endpoint.', status_code=400)
+    sid = request.form.get('sid')
+    key = request.form.get('key')
 
     sid_url = new_secret(data=request.form.get('data'), sid=sid, key=key)
     if sid:
@@ -120,51 +116,60 @@ def new(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]
 
 
 @app.route('/get/<sid>/<key>')
-def get(sid: str, key: str) -> str | tuple[str, int]:
+@app.route('/get/<sid>/<key>/<token>')
+def get(sid: str, key: str, token: str | None = None) -> str | tuple[str, int]:
     # Force Flask to read remaining request body bytes to avoid TCP reset issues
     _dummy = len(request.data)  # noqa E841
 
     validate_key(key)
     validate_sid(sid)
-    exists, as_file = secret_exists(sid)
-    if exists:
-        if as_file:
-            h1 = _('download?')
-            btn = _('download!')
-            btn_js = (
-                    'id="button" '
-                    'onclick="'
-                    'document.getElementById(\'button\').disabled = true;'
-                    'document.getElementById(\'button\').value = \'' +
-                    _('download done') +
-                    '\';'
-                    'document.getElementById(\'form\').submit();'
-                    '"'
-            )
-            icon = '&#x1f4be;'
-        else:
-            h1 = _('reveal?')
-            btn = _('reveal!')
-            btn_js = ''
-            icon = '&#x1f50d;'
 
-        return html(f'''
-            <h1>{h1}</h1>
-            <p>{_('only once')}</p>
-            <form id="form" action="/reveal/{sid}/{key}" method="post">
-                <input name="compat" type="hidden" value="lynx needs this">
-                <input type="submit" value="{icon} {btn}" {btn_js}>
-            </form>
-        '''), 200
+    hidden_token_str = f'<input name="token" type="hidden" value="{token}">' if token else ''
+
+    if secret_exists_as_file(sid):
+        h1 = _('download?')
+        btn = _('download!')
+        btn_js = (
+                'id="button" '
+                'onclick="'
+                'document.getElementById(\'button\').disabled = true;'
+                'document.getElementById(\'button\').value = \'' +
+                _('download done') +
+                '\';'
+                'document.getElementById(\'form\').submit();'
+                '"'
+        )
+        icon = '&#x1f4be;'
     else:
-        raise TransferixException(msg='already revealed', status_code=410)
+        h1 = _('reveal?')
+        btn = _('reveal!')
+        btn_js = ''
+        icon = '&#x1f50d;'
+
+    return html(f'''
+        <h1>{h1}</h1>
+        <p>{_('only once')}</p>
+        <form id="form" action="/reveal" method="post">
+            <input name="compat" type="hidden" value="lynx needs this">
+            <input name="sid" type="hidden" value="{sid}">
+            <input name="key" type="hidden" value="{key}">
+            {hidden_token_str}
+            <input type="submit" value="{icon} {btn}" {btn_js}>
+        </form>
+    '''), 200
 
 
-@app.route('/reveal/<sid>/<key>', methods=['POST'])
-def reveal(sid: str, key: str) -> str | tuple[str, int] | Any:
+@app.route('/reveal', methods=['POST'])
+def reveal() -> str | tuple[str, int] | Any:
+    sid = request.form['sid']
+    key = request.form['key']
+    token = request.form.get('token')
+
+    is_request = validate_reveal(sid=sid, token=token)
     validate_key(key)
-    validate_sid(sid)
     secret_bytes, filename, status = retrieve(sid, key)
+    if is_request:
+        update_request_status(sid=sid, status=RequestStatus.REVEALED)
     if status == ALREADY_REVEALED:
         raise TransferixException(msg='already revealed', status_code=410)
     elif status == WRONG_KEY:

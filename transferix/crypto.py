@@ -1,6 +1,7 @@
 from base64 import b64decode, b64encode
 from os import environ, mkdir, rename, makedirs
 from os.path import isdir, isfile, join
+from pathlib import Path
 from re import compile as re_compile
 from secrets import choice
 from shutil import rmtree
@@ -12,7 +13,9 @@ from nacl.utils import random
 
 from transferix.errorhandler import TransferixException
 
-DATA = environ.get('TRANSFERIX_DATA', '/tmp')
+DATA = Path(environ.get('TRANSFERIX_DATA', '/tmp'))
+REQUEST_INFO = DATA / 'request_infos'
+
 SID_LEN = 8
 SID_RE = re_compile(f'^[A-Za-z0-9]{{{SID_LEN}}}$')
 SID_POOL = ascii_letters + digits
@@ -23,8 +26,9 @@ WRONG_KEY = 1
 OK = 2
 
 
-def generate_sid(length: int = SID_LEN, path: str = DATA) -> str:
-    makedirs(path, mode=0o700, exist_ok=True)
+def generate_sid(length: int = SID_LEN, is_request: bool = False) -> str:
+    makedirs(DATA, mode=0o700, exist_ok=True)
+    makedirs(REQUEST_INFO, mode=0o700, exist_ok=True)
     while True:
         try:
             # Again, mkdir is an atomic operation on POSIX file systems.
@@ -33,7 +37,9 @@ def generate_sid(length: int = SID_LEN, path: str = DATA) -> str:
             sid = ''
             for i in range(length):
                 sid += choice(SID_POOL)
-            mkdir(join(path, sid), mode=0o700)
+            mkdir(DATA / sid, mode=0o700)
+            if is_request:
+                mkdir(REQUEST_INFO / sid, mode=0o700)
             return sid
         except FileExistsError:
             continue
@@ -74,8 +80,10 @@ def retrieve(sid: str, key: str) -> tuple[bytes | None, str | None, int]:
     return decrypted_bytes, filename, OK
 
 
-def secret_exists(sid: str) -> tuple[bool, bool]:
-    return isdir(join(DATA, sid)), isfile(join(DATA, sid, 'filename'))
+def secret_exists_as_file(sid: str) -> bool:
+    if not isdir(join(DATA, sid)):
+        raise TransferixException(msg='already revealed', status_code=410)
+    return isfile(join(DATA, sid, 'filename'))
 
 
 def generate_key() -> bytes:
