@@ -55,7 +55,6 @@ def request_secret() -> Any:
     sid = generate_sid(is_request=True)
     key = get_key_from_bytes(generate_key())
     token = generate_request_token(sid)
-    update_request_status(sid=sid, status=RequestStatus.INIT)
     request_link = url_for('form_plain', sid=sid, key=key, _external=True)
 
     return html(f'''
@@ -165,11 +164,9 @@ def reveal() -> str | tuple[str, int] | Any:
     key = request.form['key']
     token = request.form.get('token')
 
-    is_request = validate_reveal(sid=sid, token=token)
+    validate_reveal(sid=sid, token=token)
     validate_key(key)
     secret_bytes, filename, status = retrieve(sid, key)
-    if is_request:
-        update_request_status(sid=sid, status=RequestStatus.REVEALED)
     if status == ALREADY_REVEALED:
         raise TransferixException(msg='already revealed', status_code=410)
     elif status == WRONG_KEY:

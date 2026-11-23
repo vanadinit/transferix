@@ -1,11 +1,10 @@
 from os import mkdir, rename, rmdir
-from os.path import isdir, isfile
 from pathlib import Path
 from secrets import token_urlsafe
 
 from markupsafe import escape
 
-from .crypto import validate_sid, ValidationError, REQUEST_INFO
+from .crypto import validate_sid, ValidationError, REQUEST_INFO, DATA
 from .errorhandler import TransferixException
 
 
@@ -16,12 +15,6 @@ class RequestStatus:
 
 
 def _safe_write(directory: Path, filename: str, content: str):
-    lock_dir = directory / 'lock'
-    try:
-        mkdir(lock_dir)
-    except FileExistsError as exc:
-        raise WriteFailure(msg='Lock directory exists', status_code=409) from exc
-
     temp_file = directory / f'{filename}.tmp'
     main_file = directory / filename
     try:
@@ -30,8 +23,6 @@ def _safe_write(directory: Path, filename: str, content: str):
         rename(temp_file, main_file)
     except OSError as exc:
         raise WriteFailure(msg='Writing file failed', status_code=409) from exc
-    finally:
-        rmdir(lock_dir)
 
 
 def get_request_status(sid: str) -> str:
@@ -49,10 +40,14 @@ def validate_request(sid: str | None, status: str):
     if sid is None:
         raise ValidationError(msg='sid missing', status_code=400)
     validate_sid(sid)
-    if not isdir(REQUEST_INFO / sid) or not isfile(REQUEST_INFO / sid / 'status'):
+    if not (REQUEST_INFO / sid).is_dir():
         raise ValidationError(msg='invalid secret ID', status_code=400)
-    if get_request_status(sid) != status:
+    if status == 'init' and not (REQUEST_INFO / sid / 'token').is_file():
         raise RequestStateException(msg='request is in wrong state', status_code=409)
+    elif status == 'stored' and not (DATA / sid / 'secret').is_file():
+        raise RequestStateException(msg='request is in wrong state', status_code=409)
+    else:
+        raise TransferixException(msg='Programming error. Please notify developers.', status_code=500)
 
 
 def get_request_strs(sid: str | None, key: str | None) -> tuple[str, str]:
@@ -66,10 +61,6 @@ def get_request_strs(sid: str | None, key: str | None) -> tuple[str, str]:
         request_fields = ''
 
     return request_path, request_fields
-
-
-def update_request_status(sid: str, status: str):
-    _safe_write(directory=REQUEST_INFO / sid, filename='status', content=status)
 
 
 class WriteFailure(TransferixException):

@@ -55,11 +55,9 @@ def api_reveal() -> tuple[Response, int]:
     key = request.json['key']
     token = request.json.get('token')
 
-    is_request = validate_reveal(sid=sid, token=token)
+    validate_reveal(sid=sid, token=token)
     validate_key(key)
     secret_bytes, filename, status = retrieve(sid, key)
-    if is_request:
-        update_request_status(sid=sid, status=RequestStatus.REVEALED)
     if status == ALREADY_REVEALED:
         raise TransferixException(msg='already revealed', status_code=410)
     elif status == WRONG_KEY:
@@ -90,7 +88,6 @@ def api_request() -> tuple[Response, int]:
     sid = generate_sid(is_request=True)
     key = get_key_from_bytes(generate_key())
     token = generate_request_token(sid)
-    update_request_status(sid=sid, status=RequestStatus.INIT)
 
     return jsonify({
         'status': 'added',
