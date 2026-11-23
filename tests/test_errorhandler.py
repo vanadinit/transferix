@@ -2,7 +2,7 @@ from unittest.mock import patch, NonCallableMagicMock
 
 
 def test_404_non_existing(client):
-    r = client.get('/some-path/does-not-exist')
+    r = client.get('/some-path/does/not/exist')
     assert r.status_code == 404
     assert b'<h1>' in r.data
 

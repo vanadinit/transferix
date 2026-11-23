@@ -4,7 +4,7 @@ from . import app
 from .crypto import retrieve, validate_key, ALREADY_REVEALED, WRONG_KEY, generate_sid, get_key_from_bytes, \
     generate_key
 from .errorhandler import TransferixException
-from .request import RequestStatus, update_request_status, generate_request_token
+from .request import generate_request_token
 from .secrets import new_secret, validate_reveal, secret_ready
 
 

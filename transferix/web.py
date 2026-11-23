@@ -11,7 +11,7 @@ from .crypto import retrieve, validate_key, validate_sid, secret_exists_as_file,
 from .errorhandler import TransferixException
 from .language import _
 from .qr import qrcode_html
-from .request import get_request_strs, generate_request_token, update_request_status, RequestStatus
+from .request import get_request_strs, generate_request_token
 from .secrets import new_secret, validate_reveal, secret_ready
 from .ui import html, max_size_msg
 

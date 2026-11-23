@@ -1,4 +1,4 @@
-from os import mkdir, rename, rmdir
+from os import rename
 from pathlib import Path
 from secrets import token_urlsafe
 
@@ -6,12 +6,6 @@ from markupsafe import escape
 
 from .crypto import validate_sid, ValidationError, REQUEST_INFO, DATA
 from .errorhandler import TransferixException
-
-
-class RequestStatus:
-    INIT = 'init'
-    STORED = 'stored'
-    REVEALED = 'revealed'
 
 
 def _safe_write(directory: Path, filename: str, content: str):
@@ -52,7 +46,7 @@ def validate_request(sid: str | None, status: str):
 
 def get_request_strs(sid: str | None, key: str | None) -> tuple[str, str]:
     if sid and key:
-        validate_request(sid=sid, status=RequestStatus.INIT)
+        validate_request(sid=sid, status='init')
         request_path = f'/{escape(sid)}/{escape(key)}'
         request_fields = (f'<input name="sid" type="hidden" value="{escape(sid)}">'
                           f'<input name="key" type="hidden" value="{escape(key)}">')
