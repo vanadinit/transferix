@@ -51,8 +51,8 @@ def api_reveal() -> tuple[Response, int]:
       token: token (optional, required if coming from a request)
     :return:
     """
-    sid = request.json['sid']
-    key = request.json['key']
+    sid = request.json.get('sid')
+    key = request.json.get('key')
     token = request.json.get('token')
 
     validate_reveal(sid=sid, token=token)
@@ -110,8 +110,8 @@ def api_request_ready() -> tuple[Response, int]:
       token: token (required)
     :return:
     """
-    sid = request.json['sid']
-    token = request.json['token']
+    sid = request.json.get('sid')
+    token = request.json.get('token')
 
     if secret_ready(sid=sid, token=token):
         return jsonify({

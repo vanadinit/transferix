@@ -5,6 +5,9 @@ def test_empty_textarea_is_400(client):
     r = client.post('/new', data={'data': ''})
     assert r.status_code == 400
 
+def test_host_header_not_reflected(client):
+    r = client.get('/request', headers={'Host': 'x"><script>alert(1)</script>'})
+    assert '<script>alert(1)' not in r.get_data(as_text=True)
 
 def test_share_and_reveal(client):
     # FIXME: Mixed web and api

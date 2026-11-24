@@ -51,7 +51,11 @@ def secret_ready(sid: str, token: str) -> bool:
     try:
         validate_request(sid=sid, status='stored')
     except RequestStateException:
-        return False
+        try:
+            validate_request(sid=sid, status='init')
+            return False
+        except RequestStateException:
+            raise TransferixException(msg='already revealed', status_code=410)
     validate_reveal(sid=sid, token=token)
 
     return True
