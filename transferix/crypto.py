@@ -73,6 +73,7 @@ def retrieve(sid: str, key: str) -> tuple[bytes | None, str | None, int]:
         filename = None
 
     rmtree(DATA / locked_sid)
+    rmtree(REQUEST_INFO / sid, ignore_errors=True)
 
     try:
         box = SecretBox(get_bytes_from_key(key))
