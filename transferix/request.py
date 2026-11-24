@@ -1,4 +1,4 @@
-from os import rename, unlink
+from os import rename
 from pathlib import Path
 from secrets import token_urlsafe
 
