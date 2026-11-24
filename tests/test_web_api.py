@@ -10,7 +10,6 @@ def test_host_header_not_reflected(client):
     assert '<script>alert(1)' not in r.get_data(as_text=True)
 
 def test_share_and_reveal(client):
-    # FIXME: Mixed web and api
     r = client.post('/api/new', json={'data': 'geheim'})
     assert r.status_code == 201
     link = r.json['secret_link']
