@@ -4,7 +4,7 @@ from . import app
 from .crypto import retrieve
 from .exceptions import TransferixException
 from .keys import generate_request_token, generate_sid, generate_key, get_key_from_bytes, validate_key
-from .secrets import new_secret, validate_reveal, secret_ready
+from .base import new_secret, validate_reveal, secret_ready
 
 
 @app.route('/api/new', methods=['POST'])

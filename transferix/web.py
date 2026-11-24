@@ -6,12 +6,12 @@ from flask import make_response, request, url_for
 from markupsafe import escape
 
 from . import app
+from .base import new_secret, validate_reveal, secret_ready, get_request_strs
 from .crypto import retrieve, secret_exists_as_file
 from .exceptions import TransferixException
+from .keys import generate_request_token, generate_sid, generate_key, get_key_from_bytes, validate_key, validate_sid
 from .language import _
 from .qr import qrcode_html
-from .keys import generate_request_token, generate_sid, generate_key, get_key_from_bytes, validate_key, validate_sid
-from .secrets import new_secret, validate_reveal, secret_ready, get_request_strs
 from .ui import html, max_size_msg
 
 
