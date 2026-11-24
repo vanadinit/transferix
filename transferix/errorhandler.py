@@ -3,14 +3,9 @@ from markupsafe import escape
 from werkzeug.exceptions import HTTPException
 
 from . import app
+from .exceptions import TransferixException
 from .language import _
 from .ui import html
-
-
-class TransferixException(Exception):
-    def __init__(self, msg: str, status_code: int):
-        self.msg = msg
-        self.status_code = status_code
 
 
 def _error_response(msg: str, status_code: int):

@@ -1,10 +1,9 @@
 from flask import jsonify, request, url_for, Response
 
 from . import app
-from .crypto import retrieve, validate_key, ALREADY_REVEALED, WRONG_KEY, generate_sid, get_key_from_bytes, \
-    generate_key
-from .errorhandler import TransferixException
-from .request import generate_request_token
+from .crypto import retrieve
+from .exceptions import TransferixException
+from .keys import generate_request_token, generate_sid, generate_key, get_key_from_bytes, validate_key
 from .secrets import new_secret, validate_reveal, secret_ready
 
 
@@ -57,12 +56,8 @@ def api_reveal() -> tuple[Response, int]:
 
     validate_reveal(sid=sid, token=token)
     validate_key(key)
-    secret_bytes, filename, status = retrieve(sid, key)
-    if status == ALREADY_REVEALED:
-        raise TransferixException(msg='already revealed', status_code=410)
-    elif status == WRONG_KEY:
-        raise TransferixException(msg='wrong key', status_code=400)
-    elif filename is not None:
+    secret_bytes, filename = retrieve(sid, key)
+    if filename is not None:
         raise TransferixException(msg='retrieving file via API is not supported', status_code=400)
     else:
         secret = secret_bytes.decode('UTF-8')

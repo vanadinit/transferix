@@ -1,7 +1,7 @@
 import pytest
-from transferix.crypto import store, retrieve, validate_key, validate_sid, OK, ALREADY_REVEALED, generate_key, \
-    generate_sid, get_key_from_bytes
-from transferix.errorhandler import TransferixException
+from transferix.crypto import store, retrieve
+from transferix.keys import generate_sid, generate_key, get_key_from_bytes, validate_key, validate_sid
+from transferix.exceptions import TransferixException
 
 
 def test_roundtrip():
@@ -9,8 +9,7 @@ def test_roundtrip():
     key = get_key_from_bytes(key_bytes)
     sid = generate_sid()
     store(sid=sid, secret_bytes=b'geheim', key_bytes=key_bytes, filename=None)
-    data, filename, status = retrieve(sid, key)
-    assert status == OK
+    data, filename = retrieve(sid, key)
     assert data == b'geheim'
     assert filename is None
 
@@ -21,8 +20,9 @@ def test_second_retrieve_is_gone():
     sid = generate_sid()
     store(sid=sid, secret_bytes=b'x', key_bytes=key_bytes, filename=None)
     retrieve(sid, key)
-    _, _, status = retrieve(sid, key)
-    assert status == ALREADY_REVEALED
+    with pytest.raises(TransferixException) as exc:
+        retrieve(sid, key)
+    assert exc.value.status_code == 410
 
 
 @pytest.mark.parametrize('bad', ['', 'zu-kurz', 'x' * 44])

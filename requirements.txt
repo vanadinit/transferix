@@ -1,3 +1,4 @@
 Flask
 pynacl
+markupsafe
 werkzeug

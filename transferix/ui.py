@@ -2,6 +2,7 @@ from os import environ
 
 from flask import url_for
 
+from .config import MAX_FILE_SIZE
 from .language import get_lang, _
 
 
@@ -34,18 +35,15 @@ def html(body: str) -> str:
 
 
 def max_size_msg() -> str:
-    max_size_env = environ.get('TRANSFERIX_MAX_FILE_SIZE', 10_000_000)
-    max_size = int(max_size_env)
-
     for div, suff in (
             (1_000_000_000, 'GB'),
             (1_000_000, 'MB'),
             (1_000, 'kB'),
     ):
-        if max_size >= div:
-            max_size_human = f'{max_size // div} {suff}'
+        if MAX_FILE_SIZE >= div:
+            max_size_human = f'{MAX_FILE_SIZE // div} {suff}'
             break
     else:
-        max_size_human = f'{max_size} Bytes'
+        max_size_human = f'{MAX_FILE_SIZE} Bytes'
 
     return f'{_("welcome file max")}: {max_size_human}.'

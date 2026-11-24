@@ -6,13 +6,12 @@ from flask import make_response, request, url_for
 from markupsafe import escape
 
 from . import app
-from .crypto import retrieve, validate_key, validate_sid, secret_exists_as_file, ALREADY_REVEALED, WRONG_KEY, \
-    generate_sid, generate_key, get_key_from_bytes
-from .errorhandler import TransferixException
+from .crypto import retrieve, secret_exists_as_file
+from .exceptions import TransferixException
 from .language import _
 from .qr import qrcode_html
-from .request import get_request_strs, generate_request_token
-from .secrets import new_secret, validate_reveal, secret_ready
+from .keys import generate_request_token, generate_sid, generate_key, get_key_from_bytes, validate_key, validate_sid
+from .secrets import new_secret, validate_reveal, secret_ready, get_request_strs
 from .ui import html, max_size_msg
 
 
@@ -122,6 +121,7 @@ def get(sid: str | None, key: str | None, token: str | None = None) -> str | tup
 
     validate_key(key)
     validate_sid(sid)
+    sid: str  # If validation raises no exception it must be str type. Define this explicit here to reduce IDE warnings.
 
     hidden_token_str = f'<input name="token" type="hidden" value="{escape(token)}">' if token else ''
 
@@ -166,12 +166,8 @@ def reveal() -> str | tuple[str, int] | Any:
 
     validate_reveal(sid=sid, token=token)
     validate_key(key)
-    secret_bytes, filename, status = retrieve(sid, key)
-    if status == ALREADY_REVEALED:
-        raise TransferixException(msg='already revealed', status_code=410)
-    elif status == WRONG_KEY:
-        raise TransferixException(msg='wrong key', status_code=400)
-    elif filename is not None:
+    secret_bytes, filename = retrieve(sid, key)
+    if filename is not None:
         try:
             filename.encode("ascii")
         except UnicodeEncodeError:

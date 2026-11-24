@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 from os import getenv
 
-from flask import Flask
+from flask import Flask, Response
 from werkzeug.middleware.proxy_fix import ProxyFix
+
+from .config import MAX_FILE_SIZE
 
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-app.config['MAX_CONTENT_LENGTH'] = int(getenv('TRANSFERIX_MAX_FILE_SIZE', 10_000_000))
+app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
-from . import web  # noqa
+
+@app.after_request
+def _security_headers(response: Response):
+    response.headers.setdefault('Referrer-Policy', 'no-referrer')
+    response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    return response
+
+
+from . import web, errorhandler  # noqa
 
 if getenv('TRANSFERIX_ENABLE_API'):
     from . import api  # noqa
