@@ -1,4 +1,4 @@
-from os import rename
+from os import rename, unlink
 from pathlib import Path
 from secrets import token_urlsafe
 
@@ -17,12 +17,8 @@ def _safe_write(directory: Path, filename: str, content: str):
             fp.write(content)
         rename(temp_file, main_file)
     except OSError as exc:
+        unlink(temp_file)
         raise WriteFailure(msg='Writing file failed', status_code=409) from exc
-
-
-def get_request_status(sid: str) -> str:
-    with open(REQUEST_INFO / sid / 'status') as f:
-        return f.read()
 
 
 def generate_request_token(sid: str) -> str:
@@ -37,12 +33,16 @@ def validate_request(sid: str | None, status: str):
     validate_sid(sid)
     if not (REQUEST_INFO / sid).is_dir():
         raise ValidationError(msg='invalid secret ID', status_code=400)
-    if status == 'init' and not (REQUEST_INFO / sid / 'token').is_file():
-        raise RequestStateException(msg='request is in wrong state', status_code=409)
-    elif status == 'stored' and not (DATA / sid / 'secret').is_file():
-        raise RequestStateException(msg='request is in wrong state', status_code=409)
-    else:
-        raise TransferixException(msg='Programming error. Please notify developers.', status_code=500)
+
+    match status:
+        case 'init':
+            if not (REQUEST_INFO / sid / 'token').is_file():
+                raise RequestStateException(msg='request is in wrong state', status_code=409)
+        case 'stored':
+            if not (DATA / sid / 'secret').is_file():
+                raise RequestStateException(msg='request is in wrong state', status_code=409)
+        case _:
+            raise TransferixException(msg='Programming error. Please notify developers.', status_code=500)
 
 
 def get_request_strs(sid: str | None, key: str | None, target: str) -> tuple[str, str]:

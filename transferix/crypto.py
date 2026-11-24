@@ -3,7 +3,7 @@ from os import environ, mkdir, rename, makedirs
 from pathlib import Path
 from re import compile as re_compile
 from secrets import choice
-from shutil import rmtree
+from shutil import rmtree, which
 from string import ascii_letters, digits
 from subprocess import run
 
@@ -22,6 +22,8 @@ SID_POOL = ascii_letters + digits
 ALREADY_REVEALED = 0
 WRONG_KEY = 1
 OK = 2
+
+SHRED_CMD = str(which('shred'))
 
 
 def generate_sid(length: int = SID_LEN, is_request: bool = False) -> str:
@@ -59,12 +61,12 @@ def retrieve(sid: str, key: str) -> tuple[bytes | None, str | None, int]:
     # destroy it.
     with open(DATA / locked_sid / 'secret', 'rb') as fp:
         secret_bytes = fp.read()
-    run(['/usr/bin/shred', DATA / locked_sid / 'secret'])
+    run([SHRED_CMD, DATA / locked_sid / 'secret'])
 
     try:
         with open(DATA / locked_sid / 'filename', 'r') as fp:
             filename = fp.read()
-        run(['/usr/bin/shred', DATA / locked_sid / 'filename'])
+        run([SHRED_CMD, DATA / locked_sid / 'filename'])
     except FileNotFoundError:
         filename = None
 
@@ -118,18 +120,18 @@ def store(sid: str, secret_bytes: bytes, key_bytes: bytes, filename: str | None)
         if not filename.isprintable():
             raise ValidationError(msg='Non-printable characters in filename', status_code=400)
         with open(DATA / sid / 'filename', 'w') as fp:
-            fp.write(filename)  #TODO encrypt filename?
+            fp.write(filename)  # TODO encrypt filename?
 
 
-def validate_key(key: str) -> None:
+def validate_key(key: str | None) -> None:
     # It's random bytes, there's not a lot to validate, except for the
     # length (32 bytes encoded using base64 - minus the rightmost '=').
-    if len(key) != 44 - 1:
+    if key is None or len(key) != 44 - 1:
         raise ValidationError(msg='Key validation failed', status_code=400)
 
 
-def validate_sid(sid: str) -> None:
-    if not SID_RE.fullmatch(sid):
+def validate_sid(sid: str | None) -> None:
+    if sid is None or not SID_RE.fullmatch(sid):
         raise ValidationError(msg='SID validation failed', status_code=400)
 
 

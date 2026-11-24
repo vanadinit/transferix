@@ -24,7 +24,7 @@ def form_plain(sid: str | None = None, key: str | None = None) -> str | tuple[st
     return html(f'''
         <h1>{_('share new secret')}</h1>
         <p>{_('welcome desc')}</p>
-        <p>{_('welcome maybe file').format(request_path=request_path)}{_("welcome maybe request") if not request_path else ''}.</p>
+        <p>{_('welcome maybe file').format(request_path=request_path)}{_("welcome maybe request") if not request_fields else ''}.</p>
         <form action="/new" method="post">
             <textarea name="data"></textarea>{request_fields}
             <input type="submit" value="&#x1f517; {_('create link')}">
@@ -41,7 +41,7 @@ def form_file(sid: str | None = None, key: str | None = None) -> str | tuple[str
     return html(f'''
         <h1>{_('share new file')}</h1>
         <p>{_('welcome file')}</p>
-        <p>{_('welcome maybe text').format(request_path=request_path)}{_("welcome maybe request") if not request_path else ''}.</p>
+        <p>{_('welcome maybe text').format(request_path=request_path)}{_("welcome maybe request") if not request_fields else ''}.</p>
         {max_size}
         <form action="/new" method="post" enctype="multipart/form-data">
             <input type="file" name="file">{request_fields}
@@ -77,9 +77,9 @@ def request_secret() -> Any:
 
 @app.route('/request/consume', methods=['POST'])
 def request_consume() -> Any:
-    sid = request.form['sid']
-    key = request.form['key']
-    token = request.form['token']
+    sid = request.form.get('sid')
+    key = request.form.get('key')
+    token = request.form.get('token')
 
     if secret_ready(sid=sid, token=token):
         return get(sid=sid, key=key, token=token)
@@ -116,7 +116,7 @@ def new() -> str | tuple[str, int] | Any:
 
 @app.route('/get/<sid>/<key>')
 @app.route('/get/<sid>/<key>/<token>')
-def get(sid: str, key: str, token: str | None = None) -> str | tuple[str, int]:
+def get(sid: str | None, key: str | None, token: str | None = None) -> str | tuple[str, int]:
     # Force Flask to read remaining request body bytes to avoid TCP reset issues
     _dummy = len(request.data)  # noqa E841
 
