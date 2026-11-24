@@ -24,6 +24,8 @@ WRONG_KEY = 1
 OK = 2
 
 SHRED_CMD = str(which('shred'))
+if 'shred' not in SHRED_CMD:
+    raise Exception('shred command not found')
 
 
 def generate_sid(length: int = SID_LEN, is_request: bool = False) -> str:
