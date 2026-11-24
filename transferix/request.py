@@ -17,7 +17,6 @@ def _safe_write(directory: Path, filename: str, content: str):
             fp.write(content)
         rename(temp_file, main_file)
     except OSError as exc:
-        unlink(temp_file)
         raise WriteFailure(msg='Writing file failed', status_code=409) from exc
 
 
