@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-
 _TMP = Path(tempfile.mkdtemp(prefix='transferix-test-'))
 os.environ['TRANSFERIX_DATA'] = str(_TMP)
 os.environ['TRANSFERIX_ENABLE_API'] = '1'
@@ -16,6 +15,11 @@ from transferix import app as flask_app  # noqa: E402
 
 def pytest_sessionfinish(session, exitstatus):
     shutil.rmtree(_TMP, ignore_errors=True)
+
+
+@pytest.fixture()
+def app():
+    return flask_app
 
 
 @pytest.fixture(autouse=True)
