@@ -1,6 +1,5 @@
-function download(label) {
-    document.getElementById('button').disabled = true;
-    document.getElementById('button').value = '&#x2705; ' + label;
-    document.getElementById('form').submit();
-    //this.parent.submit();
+function download(btn) {
+    btn.disabled = true;
+    btn.value = btn.dataset.done;
+    btn.form.submit();
 }

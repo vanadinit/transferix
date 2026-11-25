@@ -13,7 +13,7 @@
     <input name="key" type="hidden" value="{{ info.key }}">
     {% if info.token %}<input name="token" type="hidden" value="{{ info.token }}">{% endif %}
     {% if download %}
-    <input type="submit" value="&#x1f4be; {{ _('download!') }}" id="button" onclick="download('{{ _('download done') }}'); ">
+    <input type="submit" value="&#x1f4be; {{ _('download!') }}" data-done="&#x2705; {{ _('download done') }}" onclick="download(this);">
     {% else %}
     <input type="submit" value="&#x1f50d; {{ _('reveal!') }}">
     {% endif %}
