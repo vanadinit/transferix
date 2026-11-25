@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="{{ url_for('static', filename='clipboard.js') }}"></script>
+{% endblock %}
+{% block body %}
+<h1>{{ _('request') }}</h1>
+<p>{{ _('request desc') }}</p>
+{{ qrcode_html(request_link)|safe }}
+<p>Request-Link: <input id="copytarget" type="text" value="{{ request_link }}"></p>
+<p><span class="button" onclick="copy()">&#x1f4cb; {{ _('clip') }}</span></p>
+<hr>
+<p>
+<form action="{{ url_for('request_consume') }}" method="post">
+    <input name="sid" type="hidden" value="{{ request_info.sid }}">
+    <input name="key" type="hidden" value="{{ request_info.key }}">
+    <input name="token" type="hidden" value="{{ request_info.token }}">
+    <input type="submit" value="&#x1f517; {{ _('go to receive') }}">
+</form>
+{% endblock %}

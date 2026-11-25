@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>{{ _('share new secret') }}</h1>
+<p>{{ _('welcome desc') }}</p>
+<p>
+    {{ _('welcome alternative') }}
+    <a href="{{ request_path }}">
+        {% if form_type == 'file' %}{{ _('welcome alternative text') }}{% else %}{{ _('welcome alternative file') }}{% endif %}
+    </a>
+    {% if not request_info %}{{ _('or') }} <a href="/request">{{ _('welcome maybe request') }}</a>{% endif %}.
+</p>
+{% if form_type == 'file' %}
+<p>{{ _("welcome file max") }}: {{ max_size_human }}.</p>
+{% endif %}
+<form action="{{ url_for('new') }}" method="post" enctype="multipart/form-data">
+    {% if form_type == 'file' %}
+    <input type="file" name="file">
+    {% else %}
+    <textarea name="data"></textarea>
+    {% endif %}
+    {% if request_info %}
+    <input name="sid" type="hidden" value="{{ request_info.sid }}">
+    <input name="key" type="hidden" value="{{ request_info.key }}">
+    {% endif %}
+    <input type="submit" value="&#x1f517; {{ _('create link') }}">
+</form>
+{% endblock %}

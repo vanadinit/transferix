@@ -1,11 +1,10 @@
-from flask import jsonify, request
+from flask import jsonify, request, render_template
 from markupsafe import escape
 from werkzeug.exceptions import HTTPException
 
 from . import app
 from .exceptions import TransferixException
 from .language import _
-from .ui import html
 
 
 def _error_response(msg: str, status_code: int):
@@ -14,7 +13,7 @@ def _error_response(msg: str, status_code: int):
         return jsonify({'status': 'error', 'msg': msg}), status_code
     else:
         app.logger.debug('request type: Web')
-        return html(f'<h1>{_("error")}</h1><p>{_(msg)}</p>'), status_code
+        return render_template('message.html', msg={'head': 'error', 'content': msg}), status_code
 
 
 @app.errorhandler(TransferixException)

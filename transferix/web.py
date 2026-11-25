@@ -1,52 +1,55 @@
 import unicodedata
+from os import getenv
 from typing import Any
 from urllib.parse import quote
 
-from flask import make_response, request, url_for
-from markupsafe import escape
+from flask import make_response, request, url_for, render_template
 
 from . import app
-from .base import new_secret, validate_reveal, secret_ready, get_request_strs
+from .base import new_secret, validate_reveal, secret_ready, get_request_params
+from .config import MAX_FILE_SIZE_HUMAN
 from .crypto import retrieve, secret_exists_as_file
 from .exceptions import TransferixException
 from .keys import generate_request_token, generate_sid, generate_key, get_key_from_bytes, validate_key, validate_sid
-from .language import _
+from .language import _, get_lang
 from .qr import qrcode_html
-from .ui import html, max_size_msg
+
+
+@app.context_processor
+def inject_globals():
+    return {
+        '_': _,
+        'lang': get_lang(),
+        'css_url': getenv('TRANSFERIX_CSS', url_for('static', filename='style.css')),
+        'logo_url': getenv('TRANSFERIX_LOGO', url_for('static', filename='logo.png')),
+        'logo_dark_url': getenv('TRANSFERIX_LOGO_DARK', url_for('static', filename='logo-darkmode.png')),
+        'logo_alt': getenv('TRANSFERIX_LABEL', 'my company'),
+    }
 
 
 @app.route('/')
 @app.route('/r/<sid>/<key>')
 def form_plain(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
-    request_path, request_fields = get_request_strs(sid=sid, key=key, target='form_file')
-
-    return html(f'''
-        <h1>{_('share new secret')}</h1>
-        <p>{_('welcome desc')}</p>
-        <p>{_('welcome maybe file').format(request_path=request_path)}{_("welcome maybe request") if not request_fields else ''}.</p>
-        <form action="/new" method="post">
-            <textarea name="data"></textarea>{request_fields}
-            <input type="submit" value="&#x1f517; {_('create link')}">
-        </form>
-    ''')
+    request_path, request_info = get_request_params(sid=sid, key=key, target='form_file')
+    return render_template(
+        'form.html',
+        form_type='plain',
+        request_path=request_path,
+        request_info=request_info,
+    ), 200
 
 
 @app.route('/file')
 @app.route('/file/<sid>/<key>')
 def form_file(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
-    request_path, request_fields = get_request_strs(sid=sid, key=key, target='form_plain')
-
-    max_size = f'<p>{max_size_msg()}</p>'
-    return html(f'''
-        <h1>{_('share new file')}</h1>
-        <p>{_('welcome file')}</p>
-        <p>{_('welcome maybe text').format(request_path=request_path)}{_("welcome maybe request") if not request_fields else ''}.</p>
-        {max_size}
-        <form action="/new" method="post" enctype="multipart/form-data">
-            <input type="file" name="file">{request_fields}
-            <input type="submit" value="&#x1f517; {_('create link')}">
-        </form>
-    ''')
+    request_path, request_info = get_request_params(sid=sid, key=key, target='form_plain')
+    return render_template(
+        'form.html',
+        form_type='file',
+        request_path=request_path,
+        request_info=request_info,
+        max_size_human=MAX_FILE_SIZE_HUMAN,
+    ), 200
 
 
 @app.route('/request')
@@ -56,22 +59,12 @@ def request_secret() -> Any:
     token = generate_request_token(sid)
     request_link = url_for('form_plain', sid=sid, key=key, _external=True)
 
-    return html(f'''
-        <h1>{_('request')}</h1>
-        <p>{_('request desc')}</p>
-        {qrcode_html(request_link)}
-        <p>Request-Link: <input id="copytarget" type="text" value="{request_link}"></p>
-        <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
-        <hr>
-        <p>
-        <form action="/request/consume" method="post" enctype="multipart/form-data">
-            <input type="submit" value="&#x1f517; {_('go to receive')}">
-            <input name="sid" type="hidden" value="{sid}">
-            <input name="key" type="hidden" value="{key}">
-            <input name="token" type="hidden" value="{token}">
-        </form>
-        </p>
-    '''), 200
+    return render_template(
+        'request.html',
+        request_link=request_link,
+        request_info={'sid': sid, 'key': key, 'token': token},
+        qrcode_html=qrcode_html,
+    ), 200
 
 
 @app.route('/request/consume', methods=['POST'])
@@ -83,11 +76,7 @@ def request_consume() -> Any:
     if secret_ready(sid=sid, token=token):
         return get(sid=sid, key=key, token=token)
     else:
-        return html(f'''
-            <h1>{_('waiting for secret')}</h1>
-            <p>{_('waiting for secret desc')}</p>
-            <p><label><input type="checkbox" id="autoReloadToggle" checked> {_('autoreload')}</label></p>
-        '''), 200
+        return render_template('waiting.html'), 200
 
 
 @app.route('/new', methods=['POST'])
@@ -99,18 +88,12 @@ def new() -> str | tuple[str, int] | Any:
 
     sid_url = new_secret(data=request.form.get('data'), sid=sid, key=key)
     if sid:
-        return html(f'''
-            <h1>{_('rid secret stored')}</h1>
-            <p>{_('rid secret stored desc')}</p>
-        '''), 201
+        return render_template(
+            'message.html',
+            msg={'head': 'rid secret stored', 'content': 'rid secret stored desc'},
+        ), 201
     else:
-        return html(f'''
-            <h1>{_('share this')}</h1>
-            <p>{_('share this desc')}</p>
-            {qrcode_html(sid_url)}
-            <p><input id="copytarget" type="text" value="{sid_url}" /></p>
-            <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
-        '''), 201
+        return render_template('share.html', sid_url=sid_url, qrcode_html=qrcode_html), 201
 
 
 @app.route('/get/<sid>/<key>')
@@ -123,39 +106,11 @@ def get(sid: str | None, key: str | None, token: str | None = None) -> str | tup
     validate_sid(sid)
     sid: str  # If validation raises no exception it must be str type. Define this explicit here to reduce IDE warnings.
 
-    hidden_token_str = f'<input name="token" type="hidden" value="{escape(token)}">' if token else ''
-
-    if secret_exists_as_file(sid):
-        h1 = _('download?')
-        btn = _('download!')
-        btn_js = (
-                'id="button" '
-                'onclick="'
-                'document.getElementById(\'button\').disabled = true;'
-                'document.getElementById(\'button\').value = \'' +
-                _('download done') +
-                '\';'
-                'document.getElementById(\'form\').submit();'
-                '"'
-        )
-        icon = '&#x1f4be;'
-    else:
-        h1 = _('reveal?')
-        btn = _('reveal!')
-        btn_js = ''
-        icon = '&#x1f50d;'
-
-    return html(f'''
-        <h1>{h1}</h1>
-        <p>{_('only once')}</p>
-        <form id="form" action="/reveal" method="post">
-            <input name="compat" type="hidden" value="lynx needs this">
-            <input name="sid" type="hidden" value="{escape(sid)}">
-            <input name="key" type="hidden" value="{escape(key)}">
-            {hidden_token_str}
-            <input type="submit" value="{icon} {btn}" {btn_js}>
-        </form>
-    '''), 200
+    return render_template(
+        'get.html',
+        info={'sid': sid, 'key': key, 'token': token},
+        download=secret_exists_as_file(sid),
+    ), 200
 
 
 @app.route('/reveal', methods=['POST'])
@@ -187,9 +142,4 @@ def reveal() -> str | tuple[str, int] | Any:
     else:
         secret = secret_bytes.decode('UTF-8')
         lines = min(len(secret.split('\n')), 100)
-        return html(f'''
-            <h1>{_('secret')}</h1>
-            <p>{_('your secret')}</p>
-            <textarea rows="{lines}" id="copytarget">{escape(secret)}</textarea>
-            <p><span class="button" onclick="copy()">&#x1f4cb; {_('clip')}</span></p>
-        '''), 200
+        return render_template('reveal.html', lines=lines, secret=secret), 200

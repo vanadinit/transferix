@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block head %}
+{% if download %}
+<script src="{{ url_for('static', filename='download.js') }}"></script>
+{% endif %}
+{% endblock %}
+{% block body %}
+{% if download %}<h1>{{ _('download?') }}</h1>{% else %}<h1>{{ _('reveal?') }}</h1>{% endif %}
+<p>{{ _('only once') }}</p>
+<form id="form" action="{{ url_for('reveal') }}" method="post">
+    <input name="compat" type="hidden" value="lynx needs this">
+    <input name="sid" type="hidden" value="{{ info.sid }}">
+    <input name="key" type="hidden" value="{{ info.key }}">
+    {% if info.token %}<input name="token" type="hidden" value="{{ info.token }}">{% endif %}
+    {% if download %}
+    <input type="submit" value="&#x1f4be; {{ _('download!') }}" id="button" onclick="download('{{ _('download done') }}'); ">
+    {% else %}
+    <input type="submit" value="&#x1f50d; {{ _('reveal!') }}">
+    {% endif %}
+</form>
+{% endblock %}

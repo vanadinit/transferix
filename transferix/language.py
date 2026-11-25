@@ -11,7 +11,6 @@ def get_lang() -> str:
 def _(msg: str) -> str:
     return TRANS[get_lang()].get(msg, msg)
 
-
 TRANS = {
     'en': {
         'already revealed': '<p>This secret has already been '
@@ -25,12 +24,13 @@ TRANS = {
         'create link': 'Create link',
         'download?': 'Download this secret?',
         'download!': 'Download the secret',
-        'download done': '&#x2705; File retrieved',
+        'download done': 'File retrieved',
         'error': 'Error',
         'go to receive': 'Receive the secret',
         'new secret': 'Check and correct the key. '
                       'Alternatively you can create a new secret and send the new link to the other side.',
         'only once': 'You can only do this once.',
+        'or': 'or',
         'request': 'Request a secret',
         'request desc': 'Give the Request-Link (validity 7 days) below to someone you want '
                         'to retrieve a secret from. Afterwards push "Receive the secret" to wait for the secret.',
@@ -48,15 +48,14 @@ TRANS = {
         'title': 'Share a secret',
         'waiting for secret': 'Waiting for secret',
         'waiting for secret desc': 'The other side has not entered the secret yet.',
+        'welcome alternative': 'Alternatively, you can',
+        'welcome alternative file': 'upload a file',
+        'welcome alternative text': 'use plain text',
         'welcome desc': 'Enter your text into the box below. Once you '
                         'hit the button, you will get a link that you '
                         'can send to someone else. That link can only '
                         'be used once.',
-        'welcome maybe file': 'Alternatively, you can '
-                              '<a href="{request_path}">upload a file</a>',
-        'welcome maybe text': 'Alternatively, you can '
-                              '<a href="{request_path}">use plain text</a>',
-        'welcome maybe request': ' or <a href="/request">request a secret</a>',
+        'welcome maybe request': 'request a secret',
         'welcome file': 'Select the file to upload below. Once you hit '
                         'the button, you will get a link that you can '
                         'send to someone else. That link can only be '
@@ -78,7 +77,7 @@ TRANS = {
         'create link': 'Link erzeugen',
         'download?': 'Vertrauliche Daten herunterladen?',
         'download!': 'Vertrauliche Daten herunterladen',
-        'download done': '&#x2705; Bereits heruntergeladen',
+        'download done': 'Bereits heruntergeladen',
         'error': 'Fehler',
         'go to receive': 'Vertrauliche Daten erhalten',
         'new secret': 'Bitte prüfen Sie den Schlüssel. '
@@ -86,6 +85,7 @@ TRANS = {
                       'und den neuen Link an die andere Seite senden.',
         'only once': 'Sie können diesen Vorgang nur <em>einmalig</em> '
                      'durchführen.',
+        'or': 'oder',
         'request': 'Vertrauliche Daten anfordern',
         'request desc': 'Geben Sie den untenstehenden Request-Link (7 Tage gültig) an die Person weiter, '
                         'von der sie vertrauliche Daten erhalten möchten. Drücken Sie danach auf "Vertrauliche Daten erhalten".',
@@ -103,16 +103,15 @@ TRANS = {
         'title': 'Vertrauliche Daten weitergeben',
         'waiting for secret': 'Warte auf vertrauliche Informationen',
         'waiting for secret desc': 'Bisher wurden auf der anderen Seite noch keine vertraulichen Informationen eingegeben.',
+        'welcome alternative': 'Alternativ können Sie',
+        'welcome alternative file': 'eine Datei hochladen',
+        'welcome alternative text': 'einfachen Text verwenden',
         'welcome desc': 'Geben Sie Ihre vertraulichen Daten in die '
                         'Textbox unten ein. Sobald Sie den Knopf '
                         'betätigen, erhalten Sie einen Link, den Sie '
                         'weitergeben können. Dieser Link kann nur ein '
                         'einziges Mal abgerufen werden.',
-        'welcome maybe file': 'Alternativ können Sie '
-                              '<a href="{request_path}">eine Datei hochladen</a>',
-        'welcome maybe text': 'Alternativ können Sie '
-                              '<a href="{request_path}">einfachen Text verwenden</a>',
-        'welcome maybe request': ' oder <a href="/request">vertrauliche Daten anfordern</a>',
+        'welcome maybe request': 'vertrauliche Daten anfordern',
         'welcome file': 'Wählen Sie die hochzuladende Datei aus. Sobald '
                         'Sie den Knopf betätigen, erhalten Sie einen '
                         'Link, den Sie weitergeben können. Dieser Link '
@@ -125,3 +124,4 @@ TRANS = {
                        'sollten die Daten also <em>jetzt</em> sichern.',
     },
 }
+

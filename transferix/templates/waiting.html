@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="{{ url_for('static', filename='reload.js') }}"></script>
+{% endblock %}
+{% block body %}
+<h1>{{ _('waiting for secret') }}</h1>
+<p>{{ _('waiting for secret desc') }}</p>
+<p>
+    <label>
+        <input type="checkbox" id="autoReloadToggle" checked> {{ _('autoreload') }}
+    </label>
+</p>
+{% endblock %}

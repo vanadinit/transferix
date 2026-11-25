@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>{{ _('title') }}</title>
+  <link rel="stylesheet" href="{{ css_url }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <a href="{{ url_for('form_plain') }}" class="headerlink">
+    <picture>
+      <source srcset="{{ logo_dark_url }}" media="(prefers-color-scheme: dark)">
+      <img src="{{ logo_url }}" id="logo" alt="{{ logo_alt }}">
+    </picture>
+  </a>
+  {% block body %}{% endblock %}
+</body>
+</html>

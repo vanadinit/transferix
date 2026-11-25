@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="{{ url_for('static', filename='clipboard.js') }}"></script>
+{% endblock %}
+{% block body %}
+<h1>{{ _('secret') }}</h1>
+<p>{{ _('your secret') }}</p>
+<textarea rows="{{ lines }}" id="copytarget">{{ secret }}</textarea>
+<p><span class="button" onclick="copy()">&#x1f4cb; {{ _('clip') }}</span></p>
+{% endblock %}

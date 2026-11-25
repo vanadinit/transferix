@@ -48,17 +48,12 @@ def validate_reveal(sid: str | None, token: str | None = None):
             raise RequestStateException(msg='no secret stored', status_code=400)
 
 
-def get_request_strs(sid: str | None, key: str | None, target: str) -> tuple[str, str]:
+def get_request_params(sid: str | None, key: str | None, target: str) -> tuple[str, dict]:
     if sid and key:
         validate_request(sid=sid, status='init')
-        request_path = url_for(target, sid=sid, key=key)
-        request_fields = (f'<input name="sid" type="hidden" value="{escape(sid)}">'
-                          f'<input name="key" type="hidden" value="{escape(key)}">')
-    else:
-        request_path = url_for(target)
-        request_fields = ''
+        return url_for(target, sid=sid, key=key), {'sid': sid, 'key': key}
 
-    return request_path, request_fields
+    return url_for(target), {}
 
 
 def validate_request(sid: str | None, status: str):
