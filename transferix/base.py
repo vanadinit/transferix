@@ -58,18 +58,18 @@ def get_request_params(sid: str | None, key: str | None, target: str) -> tuple[s
 
 def validate_request(sid: str | None, status: str):
     if sid is None:
-        raise ValidationError(msg='sid missing', status_code=400)
+        raise ValidationError(msg='invalid sid', status_code=400)
     validate_sid(sid)
     if not (REQUEST_INFO / sid).is_dir():
-        raise ValidationError(msg='invalid secret ID', status_code=400)
+        raise ValidationError(msg='invalid sid', status_code=400)
 
     match status:
         case 'init':
             if not (REQUEST_INFO / sid / 'token').is_file():
-                raise RequestStateException(msg='request is in wrong state', status_code=409)
+                raise RequestStateException(msg='wrong state', status_code=409)
         case 'stored':
             if not (DATA / sid / 'secret').is_file():
-                raise RequestStateException(msg='request is in wrong state', status_code=409)
+                raise RequestStateException(msg='wrong state', status_code=409)
         case _:
             raise TransferixException(msg='Programming error. Please notify developers.', status_code=500)
 

@@ -18,7 +18,7 @@ def _safe_write(directory: Path, filename: str, content: str):
             fp.write(content)
         rename(temp_file, main_file)
     except OSError as exc:
-        raise WriteFailure(msg='Writing file failed', status_code=409) from exc
+        raise WriteFailure(msg='writing file failed', status_code=409) from exc
 
 
 def generate_sid(length: int = SID_LEN, is_request: bool = False) -> str:
@@ -42,7 +42,7 @@ def generate_sid(length: int = SID_LEN, is_request: bool = False) -> str:
 
 def validate_sid(sid: str | None) -> None:
     if sid is None or not SID_RE.fullmatch(sid):
-        raise ValidationError(msg='SID validation failed', status_code=400)
+        raise ValidationError(msg='invalid sid', status_code=400)
 
 
 def generate_key() -> bytes:
@@ -53,7 +53,7 @@ def validate_key(key: str | None) -> None:
     # It's random bytes, there's not a lot to validate, except for the
     # length (32 bytes encoded using base64 - minus the rightmost '=').
     if key is None or len(key) != 44 - 1:
-        raise ValidationError(msg='Key validation failed', status_code=400)
+        raise ValidationError(msg='invalid key', status_code=400)
 
 
 def get_key_from_bytes(key_bytes: bytes) -> str:

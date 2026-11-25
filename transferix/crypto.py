@@ -53,14 +53,14 @@ def secret_exists_as_file(sid: str) -> bool:
 
 def store(sid: str, secret_bytes: bytes, key_bytes: bytes, filename: str | None):
     if filename is not None and not filename.isprintable():
-        raise ValidationError(msg='Non-printable characters in filename', status_code=400)
+        raise ValidationError(msg='filename not printable', status_code=400)
 
     box = SecretBox(key_bytes)
     try:
         with open(DATA / sid / 'secret', 'xb') as fp:
             fp.write(box.encrypt(secret_bytes))
     except FileExistsError as exc:
-        raise TransferixException(msg='secret already stored', status_code=409) from exc
+        raise TransferixException(msg='already stored', status_code=409) from exc
 
     if filename is not None:
         with open(DATA / sid / 'filename', 'w') as fp:

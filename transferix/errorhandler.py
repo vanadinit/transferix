@@ -30,4 +30,4 @@ def handle_http_exception(e: HTTPException):
 @app.errorhandler(Exception)
 def handle_unknown_exception(e: Exception):
     app.logger.exception('Unhandled error', exc_info=e)
-    return _error_response('internal error', 500)
+    return _error_response('unknown error', 500)

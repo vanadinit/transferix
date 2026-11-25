@@ -5,7 +5,7 @@
 {% block body %}
 <h1>{{ _('request') }}</h1>
 <p>{{ _('request desc') }}</p>
-{{ qrcode_html(request_link)|safe }}
+{{ qrcode_html(request_link) | safe }}
 <p>Request-Link: <input id="copytarget" type="text" value="{{ request_link }}"></p>
 <p><span class="button" onclick="copy()">&#x1f4cb; {{ _('clip') }}</span></p>
 <hr>

@@ -34,16 +34,28 @@ TRANS = {
                             'you should inform the creator of the '
                             'secret about a potential security '
                             'breach.',
+        'already stored': 'The secret has already been stored.[p]'
+                          'If you did not store it, but you are '
+                          'supposed to stored it, you should inform the '
+                          'creator of the link about potential malicious '
+                          'secret data.',
         'autoreload': 'Auto reload every 5s',
         'clip': 'Copy to clipboard',
         'create link': 'Create link',
         'download?': 'Download this secret?',
         'download!': 'Download the secret',
         'download done': 'File retrieved',
+        'empty secret': 'The secret is empty. Please insert the desired secret data.',
         'error': 'Error',
+        'filename not printable': 'Non-printable characters in filename.',
         'go to receive': 'Receive the secret',
+        'invalid key': 'Invalid key',
+        'invalid parameters': 'Your request contains invalid parameters or parameter combinations.',
+        'invalid secret token': 'Invalid token',
+        'invalid sid': 'Invalid secret ID',
         'new secret': 'Check and correct the key. '
                       'Alternatively you can create a new secret and send the new link to the other side.',
+        'no secret stored': 'The request seems to be valid, but there is no secret available.',
         'only once': 'You can only do this once.',
         'or': 'or',
         'request': 'Request a secret',
@@ -61,6 +73,7 @@ TRANS = {
         'share this desc': 'Send this link to someone else. [em]It will '
                            'be valid for 7 days.[/em]',
         'title': 'Share a secret',
+        'unknown error': 'Unknown error.',
         'waiting for secret': 'Waiting for secret',
         'waiting for secret desc': 'The other side has not entered the secret yet.',
         'welcome alternative': 'Alternatively, you can',
@@ -76,7 +89,9 @@ TRANS = {
                         'send to someone else. That link can only be '
                         'used once.',
         'welcome file max': 'Maximum allowed size',
+        'writing file failed': 'Failed to write file.',
         'wrong key': 'Wrong key. Secret has been destroyed.',
+        'wrong state': 'Your request is in the wrong state.',
         'your secret': 'Here’s your secret. It is no longer accessible '
                        'through the link, so copy it [em]now[/em].',
     },
@@ -87,17 +102,29 @@ TRANS = {
                             'abgerufen haben, sollten Sie die '
                             'Versender*in über die potentielle '
                             'Kompromittierung informieren.',
+        'already stored': 'Die vertraulichen Daten wurden bereits '
+                          'gespeichert.[p]Falls Sie die Daten nicht '
+                          'gespeichert haben, dies jedoch hätten tun sollen, '
+                          'informieren Sie die Ersteller*in des Links '
+                          'über möglicherweise schadhafte vertrauliche Daten.',
         'autoreload': 'Automatisch alle 5s neu laden',
         'clip': 'In die Zwischenablage kopieren',
         'create link': 'Link erzeugen',
         'download?': 'Vertrauliche Daten herunterladen?',
         'download!': 'Vertrauliche Daten herunterladen',
         'download done': 'Bereits heruntergeladen',
+        'empty secret': 'Keine vertraulichen Daten erfasst. Bitte geben Sie die gewünschten vertraulichen Daten ein.',
         'error': 'Fehler',
+        'filename not printable': 'Der Dateiname enthält ungültige Zeichen.',
         'go to receive': 'Vertrauliche Daten erhalten',
+        'invalid key': 'Ungültiger Schlüssel',
+        'invalid parameters': 'Ihre Anfrage enthält ungültige Parameter oder Parameterkombinationen.',
+        'invalid secret token': 'Ungültiger Token',
+        'invalid sid': 'Ungültige Secret ID',
         'new secret': 'Bitte prüfen Sie den Schlüssel. '
                       'Alternativ können Sie ein neues Geheimnis für vertrauliche Daten generieren '
                       'und den neuen Link an die andere Seite senden.',
+        'no secret stored': 'Ihre Anfrage erscheint gültig, aber es sind keine vertraulichen Daten dafür verfügbar.',
         'only once': 'Sie können diesen Vorgang nur [em]einmalig[/em] '
                      'durchführen.',
         'or': 'oder',
@@ -116,6 +143,7 @@ TRANS = {
         'share this desc': 'Geben Sie den folgenden Link weiter. [em]Er '
                            'ist nur für 7 Tage gültig.[/em]',
         'title': 'Vertrauliche Daten weitergeben',
+        'unknown error': 'Unbekannter Fehler.',
         'waiting for secret': 'Warte auf vertrauliche Informationen',
         'waiting for secret desc': 'Bisher wurden auf der anderen Seite noch keine vertraulichen Informationen eingegeben.',
         'welcome alternative': 'Alternativ können Sie',
@@ -132,7 +160,9 @@ TRANS = {
                         'Link, den Sie weitergeben können. Dieser Link '
                         'kann nur ein einziges Mal abgerufen werden.',
         'welcome file max': 'Maximal erlaubte Größe',
+        'writing file failed': 'Schreiben der Datei fehlgeschlagen.',
         'wrong key': 'Falscher Schlüssel. Daten wurden gelöscht.',
+        'wrong state': 'Ihre Anfrage befindet sich im falschem Status.',
         'your secret': 'Untenstehend finden Sie die angefragten '
                        'vertraulichen Daten. Von nun an ist es nicht '
                        'mehr möglich, diesen Link zu verwenden. Sie '

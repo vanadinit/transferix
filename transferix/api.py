@@ -21,7 +21,7 @@ def api_new() -> tuple[Response, int]:
     :return:
     """
     if not request.is_json:
-        raise TransferixException(msg='No valid JSON request', status_code=400)
+        raise TransferixException(msg='No valid JSON request.', status_code=400)
 
     sid = request.json.get('sid')
     key = request.json.get('key')
@@ -29,7 +29,7 @@ def api_new() -> tuple[Response, int]:
     try:
         sid_url = new_secret(data=request.json['data'], sid=sid, key=key)
     except KeyError as exc:
-        raise TransferixException(msg='Data missing', status_code=400) from exc
+        raise TransferixException(msg='Data missing.', status_code=400) from exc
 
     if sid:
         return jsonify({'status': 'ok', 'msg': 'secret stored'}), 201
@@ -58,7 +58,7 @@ def api_reveal() -> tuple[Response, int]:
     validate_key(key)
     secret_bytes, filename = retrieve(sid, key)
     if filename is not None:
-        raise TransferixException(msg='retrieving file via API is not supported', status_code=400)
+        raise TransferixException(msg='Retrieving file via API is not supported.', status_code=400)
     else:
         secret = secret_bytes.decode('UTF-8')
         return jsonify({
