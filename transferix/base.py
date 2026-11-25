@@ -1,5 +1,4 @@
 from flask import request, url_for
-from markupsafe import escape
 
 from .config import REQUEST_INFO, DATA
 from .crypto import store

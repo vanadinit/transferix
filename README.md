@@ -74,23 +74,6 @@ Retrieval is destructive: the directory is renamed to `<sid>_locked`
 (an atomic POSIX operation) and removed after the plaintext was read, so two
 concurrent requests cannot retrieve the same secret twice.
 
-## Standard Endpoints
-
-| Method | Path                  | Purpose                                                            |
-|-----|-----------------------|--------------------------------------------------------------------|
-| GET | `/`                   | Start page, form: share a text secret, links to `/file` and `/request` |
-| GET | `/r/<sid>/<key>`      | Form: submit a secret into a pending request                       |
-| GET | `/file`, `/file/<sid>/<key>` | Form: share a file                                                 |
-| POST | `/new`                | Browser form target (HTML response)                                |
-| GET | `/get/<sid>/<key>`    | Confirmation page (reveal?/download?)                              |
-| GET | `/get/<sid>/<key>/<token>` | Confirmation page (reveal?/download?) for requested secrets        |
-| POST | `/reveal`             | Destroys the secret, returns text or file                          |
-| GET | `/request`            | Creates a request and shows the link                               |
-| GET | `/request/consume`    | Waits for / fetches the requested secret (browser)                 |
-
-> **Note:** the browser endpoints under `/new` and `/reveal` return HTML and are
-> meant for the web UI. Programmatic clients should use `/api/*` (see below) exclusively.
-
 
 ## API reference
 
@@ -110,36 +93,90 @@ All API endpoints accept and return `application/json`. Errors always carry
 
 ### `POST /api/new`
 
+Create a new secret. If `sid` and `key` are given, the secret is stored into a
+pending request and only a confirmation is returned.
+
+| Parameter | Required | Description                                             |
+|-----------|----------|---------------------------------------------------------|
+| `data`    | yes      | The secret itself (UTF-8 text)                          |
+| `sid`     | no       | Secret ID, when answering a request                     |
+| `key`     | no       | Key, when answering a request (required together with `sid`) |
+
 ```console
 $ curl -sS -X POST https://transferix.example/api/new \
     -H 'Content-Type: application/json' \
     --data '{"data": "my secret"}'
-{"secret_link": "https://transferix.example/get/ab12/…", "status": "ok"}
+{"secret_link": "https://transferix.example/get/ab12cd34/…", "status": "ok"}
 ```
 
-### `POST /api/reveal/<sid>/<key>`
+Responds `201 Created`. Without `sid`/`key` the response contains `secret_link`;
+with them it contains `msg` instead (`"secret stored"`).
+
+Submitting into a request:
 
 ```console
-$ curl -sS -X POST https://transferix.example/api/reveal/ab12/…
+$ curl -sS -X POST https://transferix.example/api/new \
+    -H 'Content-Type: application/json' \
+    --data '{"data": "my secret", "sid": "ab12cd34", "key": "…"}'
+{"msg": "secret stored", "status": "ok"}
+```
+
+### `POST /api/reveal`
+
+Retrieve a text secret. For secrets stored into a request, the `token` is
+mandatory.
+
+| Parameter | Required | Description                                  |
+|-----------|----------|----------------------------------------------|
+| `sid`     | yes      | Secret ID                                    |
+| `key`     | yes      | Key from the secret link (43 characters)     |
+| `token`   | no       | Request token, required for requested secrets |
+
+```console
+$ curl -sS -X POST https://transferix.example/api/reveal \
+    -H 'Content-Type: application/json' \
+    --data '{"sid": "ab12cd34", "key": "…"}'
 {"secret": "my secret", "status": "ok"}
 ```
 
-A second call returns `410 Gone` – the secret is destroyed after the first
-successful retrieval, regardless of whether the caller processed the response.
+Retrieval is destructive: a second call returns `410 Gone`, regardless of
+whether the caller processed the response. A wrong `key` returns `400` and also
+destroys the secret. File secrets cannot be retrieved via the API and are
+rejected with `400` – use the browser link instead.
 
-### `POST /api/request` / `POST /api/request/<rid>/consume`
+### `POST /api/request`
+
+Create a request. Takes no parameters.
 
 ```console
 $ curl -sS -X POST https://transferix.example/api/request
-{"consume_link": "…/api/request/<rid>/consume",
- "request_link": "…/<rid>",
- "status": "added"}
-
-$ curl -sS -X POST https://transferix.example/api/request/<rid>/consume
-{"status": "waiting", "msg": "secret has not been entered yet"}
+{"key": "…",
+ "request_link": "https://transferix.example/r/ab12cd34/…",
+ "sid": "ab12cd34",
+ "status": "added",
+ "token": "…"}
 ```
 
-`request_link` is handed to the person who should send you a secret. Poll
-`consume_link` until `status` is `ok`; you then receive `secret_link` (for the
-browser) and `secret_api_link` (for `POST`-based retrieval). Polling is
-unauthenticated – anyone holding `consume_link` can fetch the secret.
+Responds `201 Created`. Hand `request_link` to the person who should send you a
+secret. Keep `sid` and `token` – they are needed to poll for the secret and to
+retrieve it.
+
+### `POST /api/request/ready`
+
+Check whether the secret of a request has been submitted yet.
+
+| Parameter | Required | Description    |
+|-----------|----------|----------------|
+| `sid`     | yes      | Secret ID      |
+| `token`   | yes      | Request token  |
+
+```console
+$ curl -sS -X POST https://transferix.example/api/request/ready \
+    -H 'Content-Type: application/json' \
+    --data '{"sid": "ab12cd34", "token": "…"}'
+{"msg": "secret has not been entered yet", "status": "waiting"}
+```
+
+Returns `200` with `status` set to `waiting` or `ready`. Once `ready`, fetch the
+secret with `POST /api/reveal`, passing `sid`, `key` and `token`.
+                                        |
