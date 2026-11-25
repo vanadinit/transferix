@@ -1,5 +1,4 @@
 from flask import jsonify, request, render_template
-from markupsafe import escape
 from werkzeug.exceptions import HTTPException
 
 from . import app
@@ -24,7 +23,7 @@ def handle_transferix_exception(e: TransferixException):
 @app.errorhandler(HTTPException)
 def handle_http_exception(e: HTTPException):
     app.logger.debug(e, exc_info=e)
-    return _error_response(f'{escape(e.name)}: {escape(e.description) or ""}', e.code or 500)
+    return _error_response(f'{e.name}: {e.description or ""}', e.code or 500)
 
 
 @app.errorhandler(Exception)

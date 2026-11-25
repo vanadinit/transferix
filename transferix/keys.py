@@ -26,7 +26,7 @@ def generate_sid(length: int = SID_LEN, is_request: bool = False) -> str:
     makedirs(REQUEST_INFO, mode=0o700, exist_ok=True)
     while True:
         try:
-            # Again, mkdir is an atomic operation on POSIX file systems.
+            # mkdir is an atomic operation on POSIX file systems.
             # Two concurrent requests cannot store data into the same
             # directory.
             sid = ''

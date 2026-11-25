@@ -43,5 +43,5 @@ def test__generate_key():
 @pytest.mark.parametrize('bad', ['\\_123456', '<script>alert("Ahh evil things")</script>'])
 def test__validate_key_fails(bad: str):
     with pytest.raises(ValidationError) as exc:
-        validate_sid(bad)
+        validate_key(bad)
     assert exc.value.status_code == 400

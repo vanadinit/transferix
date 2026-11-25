@@ -15,6 +15,7 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 def _security_headers(response: Response):
     response.headers.setdefault('Referrer-Policy', 'no-referrer')
     response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    response.headers.set('Cache-Control', 'no-store')
     return response
 
 

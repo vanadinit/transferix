@@ -64,9 +64,8 @@ $TRANSFERIX_DATA/
 │   ├── secret             NaCl SecretBox ciphertext
 │   └── filename           original file name (only for file uploads)
 └── request_infos/
-    └── <rid>/
-        ├── info           "<sid>|<key>" once the sender submitted
-        └── lock           short-lived lock directory
+    └── <sid>/
+        └── token          "<sid>|<key>" once the sender submitted
 ```
 
 The encryption key is **never stored** – it exists only in the link that is
@@ -77,17 +76,17 @@ concurrent requests cannot retrieve the same secret twice.
 
 ## Standard Endpoints
 
-| Method | Path | Purpose |
-|-----| ---- | ------- |
-| GET | `/`            | Form: share a text secret |
-| GET | `/<rid>`       | Form: submit a secret into a pending request |
-| GET | `/file`, `/file/<rid>` | Form: share a file |
-| POST | `/new`, `/new/<rid>` | Browser form target (HTML response) |
-| GET | `/get/<sid>/<key>` | Confirmation page ("reveal?") |
-| POST | `/reveal/<sid>/<key>` | Destroys the secret, returns text or file |
-| GET | `/request`     | Creates a request, redirects to `/request/<rid>` |
-| GET | `/request/<rid>` | Shows the request link (and QR code) to the sender |
-| GET | `/request/<rid>/consume` | Waits for / fetches the requested secret (browser) |
+| Method | Path                  | Purpose                                                            |
+|-----|-----------------------|--------------------------------------------------------------------|
+| GET | `/`                   | Start page, form: share a text secret, links to `/file` and `/request` |
+| GET | `/r/<sid>/<key>`      | Form: submit a secret into a pending request                       |
+| GET | `/file`, `/file/<sid>/<key>` | Form: share a file                                                 |
+| POST | `/new`                | Browser form target (HTML response)                                |
+| GET | `/get/<sid>/<key>`    | Confirmation page (reveal?/download?)                              |
+| GET | `/get/<sid>/<key>/<token>` | Confirmation page (reveal?/download?) for requested secrets        |
+| POST | `/reveal`             | Destroys the secret, returns text or file                          |
+| GET | `/request`            | Creates a request and shows the link                               |
+| GET | `/request/consume`    | Waits for / fetches the requested secret (browser)                 |
 
 > **Note:** the browser endpoints under `/new` and `/reveal` return HTML and are
 > meant for the web UI. Programmatic clients should use `/api/*` (see below) exclusively.
@@ -101,13 +100,12 @@ All API endpoints accept and return `application/json`. Errors always carry
 `{"status": "error", "msg": "..."}`.
 
 
-| Method | Path | Purpose |
-|-----| ---- | ------- |
-| POST | `/api/new`     | Create a secret, JSON |
-| POST | `/api/new/<rid>` | Submit a secret into a pending request, JSON |
-| POST | `/api/reveal/<sid>/<key>` | Retrieve a text secret, JSON |
-| POST | `/api/request` | Create a request, JSON |
-| POST | `/api/request/<rid>/consume` | Poll for / fetch the requested secret, JSON |
+| Method | Path                 | Purpose                                                |
+|-----|----------------------|--------------------------------------------------------|
+| POST | `/api/new`           | Create a secret                                        |
+| POST | `/api/reveal`        | Retrieve a text secret (file is not supported via API) |
+| POST | `/api/request`       | Create a request                                       |
+| POST | `/api/request/ready` | Poll for a requested secret                            |
 
 
 ### `POST /api/new`

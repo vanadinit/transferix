@@ -34,6 +34,19 @@ def retrieve(sid: str, key: str) -> tuple[bytes | None, str | None]:
     except FileNotFoundError:
         filename = None
 
+    # Destroy the secret *now*, before trying to decrypt it.
+    #
+    # a) The logic required to attempt decryption and then *unlock* the
+    #    secret again when that fails is more complicated.
+    # b) If we decrypt a secret and then deletion fails for whatever
+    #    absurd reason, then we risk allowing to decrypt/reveal the same
+    #    secret twice.
+    #
+    # The easiest thing to *reason about* is to destroy a secret as
+    # early as possible.
+    #
+    # It's fine if that means that users might need to retransmit a
+    # secret in corner cases or attack scenarios.
     rmtree(DATA / locked_sid)
     rmtree(REQUEST_INFO / sid, ignore_errors=True)
 
