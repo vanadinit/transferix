@@ -4,7 +4,6 @@ from werkzeug.exceptions import HTTPException
 
 from . import app
 from .exceptions import TransferixException
-from .language import _
 
 
 def _error_response(msg: str, status_code: int):

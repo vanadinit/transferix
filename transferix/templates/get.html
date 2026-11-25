@@ -6,7 +6,7 @@
 {% endblock %}
 {% block body %}
 {% if download %}<h1>{{ _('download?') }}</h1>{% else %}<h1>{{ _('reveal?') }}</h1>{% endif %}
-<p>{{ _('only once') }}</p>
+<p>{{ _('only once') | codes }}</p>
 <form id="form" action="{{ url_for('reveal') }}" method="post">
     <input name="compat" type="hidden" value="lynx needs this">
     <input name="sid" type="hidden" value="{{ info.sid }}">

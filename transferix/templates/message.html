@@ -1,5 +1,5 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>{{ _(msg.head) }}</h1>
-<p>{{ _(msg.content) }}</p>
+<p>{{ _(msg.content) | codes }}</p>
 {% endblock %}

@@ -17,7 +17,7 @@ if 'shred' not in SHRED_CMD:
     raise Exception('shred command not found')
 
 
-def human_format_size(size: int) -> str:
+def _human_format_size(size: int) -> str:
     for div, suff in (
             (1_000_000_000, 'GB'),
             (1_000_000, 'MB'),
@@ -28,4 +28,4 @@ def human_format_size(size: int) -> str:
     return f'{size} Bytes'
 
 
-MAX_FILE_SIZE_HUMAN = human_format_size(MAX_FILE_SIZE)
+MAX_FILE_SIZE_HUMAN = _human_format_size(MAX_FILE_SIZE)

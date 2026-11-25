@@ -11,8 +11,10 @@ from .config import MAX_FILE_SIZE_HUMAN
 from .crypto import retrieve, secret_exists_as_file
 from .exceptions import TransferixException
 from .keys import generate_request_token, generate_sid, generate_key, get_key_from_bytes, validate_key, validate_sid
-from .language import _, get_lang
+from .language import _, get_lang, codes
 from .qr import qrcode_html
+
+app.jinja_env.filters['codes'] = codes
 
 
 @app.context_processor

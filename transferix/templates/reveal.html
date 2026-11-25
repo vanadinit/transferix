@@ -4,7 +4,7 @@
 {% endblock %}
 {% block body %}
 <h1>{{ _('secret') }}</h1>
-<p>{{ _('your secret') }}</p>
+<p>{{ _('your secret') | codes }}</p>
 <textarea rows="{{ lines }}" id="copytarget">{{ secret }}</textarea>
 <p><span class="button" onclick="copy()">&#x1f4cb; {{ _('clip') }}</span></p>
 {% endblock %}

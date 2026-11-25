@@ -1,4 +1,18 @@
 from flask import request
+from markupsafe import escape, Markup
+
+CODES = {
+    '[p]': '</p><p>',
+    '[em]': '<em>',
+    '[/em]': '</em>',
+}
+
+
+def codes(text: str) -> str:
+    out = str(escape(text))
+    for code, html in CODES.items():
+        out = out.replace(code, html)
+    return Markup(out)
 
 
 def get_lang() -> str:
@@ -11,14 +25,15 @@ def get_lang() -> str:
 def _(msg: str) -> str:
     return TRANS[get_lang()].get(msg, msg)
 
+
 TRANS = {
     'en': {
-        'already revealed': '<p>This secret has already been '
-                            'revealed.</p><p>If you are the recipient '
+        'already revealed': 'This secret has already been '
+                            'revealed.[p]If you are the recipient '
                             'of this secret, but haven\'t revealed it, '
                             'you should inform the creator of the '
                             'secret about a potential security '
-                            'breach.</p>',
+                            'breach.',
         'autoreload': 'Auto reload every 5s',
         'clip': 'Copy to clipboard',
         'create link': 'Create link',
@@ -43,8 +58,8 @@ TRANS = {
         'share new secret': 'Share a new secret',
         'share new file': 'Share a new file',
         'share this': 'Share this link',
-        'share this desc': 'Send this link to someone else. <em>It will '
-                           'be valid for 7 days.</em>',
+        'share this desc': 'Send this link to someone else. [em]It will '
+                           'be valid for 7 days.[/em]',
         'title': 'Share a secret',
         'waiting for secret': 'Waiting for secret',
         'waiting for secret desc': 'The other side has not entered the secret yet.',
@@ -63,15 +78,15 @@ TRANS = {
         'welcome file max': 'Maximum allowed size',
         'wrong key': 'Wrong key. Secret has been destroyed.',
         'your secret': 'Here’s your secret. It is no longer accessible '
-                       'through the link, so copy it <em>now</em>.',
+                       'through the link, so copy it [em]now[/em].',
     },
     'de': {
-        'already revealed': '<p>Die vertraulichen Daten wurden bereits '
-                            'abgerufen.</p><p>Falls Sie Empfänger*in '
+        'already revealed': 'Die vertraulichen Daten wurden bereits '
+                            'abgerufen.[p]Falls Sie Empfänger*in '
                             'der Daten sind, diese aber nicht selbst '
                             'abgerufen haben, sollten Sie die '
                             'Versender*in über die potentielle '
-                            'Kompromittierung informieren.</p>',
+                            'Kompromittierung informieren.',
         'autoreload': 'Automatisch alle 5s neu laden',
         'clip': 'In die Zwischenablage kopieren',
         'create link': 'Link erzeugen',
@@ -83,7 +98,7 @@ TRANS = {
         'new secret': 'Bitte prüfen Sie den Schlüssel. '
                       'Alternativ können Sie ein neues Geheimnis für vertrauliche Daten generieren '
                       'und den neuen Link an die andere Seite senden.',
-        'only once': 'Sie können diesen Vorgang nur <em>einmalig</em> '
+        'only once': 'Sie können diesen Vorgang nur [em]einmalig[/em] '
                      'durchführen.',
         'or': 'oder',
         'request': 'Vertrauliche Daten anfordern',
@@ -98,8 +113,8 @@ TRANS = {
         'share new secret': 'Neue vertrauliche Daten',
         'share new file': 'Neue vertrauliche Datei hochladen',
         'share this': 'Geben Sie diesen Link weiter',
-        'share this desc': 'Geben Sie den folgenden Link weiter. <em>Er '
-                           'ist nur für 7 Tage gültig.</em>',
+        'share this desc': 'Geben Sie den folgenden Link weiter. [em]Er '
+                           'ist nur für 7 Tage gültig.[/em]',
         'title': 'Vertrauliche Daten weitergeben',
         'waiting for secret': 'Warte auf vertrauliche Informationen',
         'waiting for secret desc': 'Bisher wurden auf der anderen Seite noch keine vertraulichen Informationen eingegeben.',
@@ -121,7 +136,6 @@ TRANS = {
         'your secret': 'Untenstehend finden Sie die angefragten '
                        'vertraulichen Daten. Von nun an ist es nicht '
                        'mehr möglich, diesen Link zu verwenden. Sie '
-                       'sollten die Daten also <em>jetzt</em> sichern.',
+                       'sollten die Daten also [em]jetzt[/em] sichern.',
     },
 }
-

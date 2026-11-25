@@ -4,7 +4,7 @@
 {% endblock %}
 {% block body %}
 <h1>{{ _('share this') }}</h1>
-<p>{{ _('share this desc') }}</p>
+<p>{{ _('share this desc') | codes }}</p>
 {{ qrcode_html(sid_url) | safe }}
 <p><input id="copytarget" type="text" value="{{ sid_url }}"/></p>
 <p><span class="button" onclick="copy()">&#x1f4cb; {{ _('clip') }}</span></p>
