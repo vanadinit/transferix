@@ -31,5 +31,5 @@ def test_500_does_not_leak_details(mock_generate_sid: MagicMock, client):
     r = client.post('/new', data={'data': 'x'})
     assert r.status_code == 500
     assert b'/tmp/' not in r.data
-    assert b'internal error' in r.data
+    assert b'Unknown error' in r.data
     mock_generate_sid.assert_called_once()

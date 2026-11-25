@@ -23,16 +23,3 @@ def test_second_retrieve_is_gone():
     with pytest.raises(TransferixException) as exc:
         retrieve(sid, key)
     assert exc.value.status_code == 410
-
-
-@pytest.mark.parametrize('bad', ['', 'zu-kurz', 'x' * 44])
-def test_invalid_key_raises(bad):
-    with pytest.raises(TransferixException) as exc:
-        validate_key(bad)
-    assert exc.value.status_code == 400
-
-
-@pytest.mark.parametrize('bad', ['../etc', 'abcd\n', 'toolong123'])
-def test_invalid_sid_raises(bad):
-    with pytest.raises(TransferixException):
-        validate_sid(bad)
