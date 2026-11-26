@@ -7,7 +7,7 @@ from flask import make_response, request, url_for, render_template
 
 from . import app
 from .auth import auth_required
-from .base import new_secret, validate_reveal, secret_ready, get_request_params
+from .base import new_secret, validate_reveal, secret_ready, validate_request
 from .config import MAX_FILE_SIZE_HUMAN
 from .crypto import retrieve, secret_exists_as_file
 from .exceptions import TransferixException
@@ -31,28 +31,47 @@ def inject_globals():
 
 
 @app.route('/')
-@app.route('/r/<sid>/<key>')
 @auth_required()
-def form_plain(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
-    request_path, request_info = get_request_params(sid=sid, key=key, target='form_file')
+def form_plain() -> tuple[str, int]:
     return render_template(
         'form.html',
         form_type='plain',
-        request_path=request_path,
-        request_info=request_info,
+        request_path=url_for('form_file'),
+        request_info={},
+    ), 200
+
+
+@app.route('/r/<sid>/<key>')
+def form_plain_request(sid: str | None = None, key: str | None = None) -> tuple[str, int]:
+    validate_request(sid=sid, status='init')
+    return render_template(
+        'form.html',
+        form_type='plain',
+        request_path=url_for('form_file_request', sid=sid, key=key),
+        request_info={'sid': sid, 'key': key},
     ), 200
 
 
 @app.route('/file')
-@app.route('/file/<sid>/<key>')
 @auth_required()
-def form_file(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
-    request_path, request_info = get_request_params(sid=sid, key=key, target='form_plain')
+def form_file() -> str | tuple[str, int]:
     return render_template(
         'form.html',
         form_type='file',
-        request_path=request_path,
-        request_info=request_info,
+        request_path=url_for('form_plain'),
+        request_info={},
+        max_size_human=MAX_FILE_SIZE_HUMAN,
+    ), 200
+
+
+@app.route('/file/<sid>/<key>')
+def form_file_request(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
+    validate_request(sid=sid, status='init')
+    return render_template(
+        'form.html',
+        form_type='plain',
+        request_path=url_for('form_text_request', sid=sid, key=key),
+        request_info={'sid': sid, 'key': key},
         max_size_human=MAX_FILE_SIZE_HUMAN,
     ), 200
 
@@ -63,7 +82,7 @@ def request_secret() -> Any:
     sid = generate_sid(is_request=True)
     key = get_key_from_bytes(generate_key())
     token = generate_request_token(sid)
-    request_link = url_for('form_plain', sid=sid, key=key, _external=True)
+    request_link = url_for('form_plain_request', sid=sid, key=key, _external=True)
 
     return render_template(
         'request.html',

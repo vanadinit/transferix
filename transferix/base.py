@@ -47,14 +47,6 @@ def validate_reveal(sid: str | None, token: str | None = None):
             raise RequestStateException(msg='no secret stored', status_code=400)
 
 
-def get_request_params(sid: str | None, key: str | None, target: str) -> tuple[str, dict]:
-    if sid and key:
-        validate_request(sid=sid, status='init')
-        return url_for(target, sid=sid, key=key), {'sid': sid, 'key': key}
-
-    return url_for(target), {}
-
-
 def validate_request(sid: str | None, status: str):
     if sid is None:
         raise ValidationError(msg='invalid sid', status_code=400)

@@ -89,7 +89,7 @@ def api_request() -> tuple[Response, int]:
 
     return jsonify({
         'status': 'added',
-        'request_link': url_for('form_plain', sid=sid, key=key, _external=True),
+        'request_link': url_for('form_plain_request', sid=sid, key=key, _external=True),
         'sid': sid,
         'key': key,
         'token': token,
