@@ -16,6 +16,7 @@ dependencies = [
 [project.optional-dependencies]
 tests = ["flake8", "pytest"]
 qr = ["qrcode"]
+auth-oidc = ['flask-oidc']
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
