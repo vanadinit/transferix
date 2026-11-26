@@ -6,7 +6,7 @@ from urllib.parse import quote
 from flask import make_response, request, url_for, render_template
 
 from . import app
-from .auth import auth_required
+from .auth import auth_required, login
 from .base import new_secret, validate_reveal, secret_ready, validate_request
 from .config import MAX_FILE_SIZE_HUMAN
 from .crypto import retrieve, secret_exists_as_file
@@ -69,8 +69,8 @@ def form_file_request(sid: str | None = None, key: str | None = None) -> str | t
     validate_request(sid=sid, status='init')
     return render_template(
         'form.html',
-        form_type='plain',
-        request_path=url_for('form_text_request', sid=sid, key=key),
+        form_type='file',
+        request_path=url_for('form_plain_request', sid=sid, key=key),
         request_info={'sid': sid, 'key': key},
         max_size_human=MAX_FILE_SIZE_HUMAN,
     ), 200
@@ -105,7 +105,6 @@ def request_consume() -> Any:
 
 
 @app.route('/new', methods=['POST'])
-@auth_required()
 def new() -> str | tuple[str, int] | Any:
     if request.is_json:
         raise TransferixException(msg='Please use API endpoint.', status_code=400)
@@ -118,8 +117,9 @@ def new() -> str | tuple[str, int] | Any:
             'message.html',
             msg={'head': 'rid secret stored', 'content': 'rid secret stored desc'},
         ), 201
-    else:
-        return render_template('share.html', sid_url=sid_url, qrcode_html=qrcode_html), 201
+    elif not login():
+        raise TransferixException('unauthenticated', 401)
+    return render_template('share.html', sid_url=sid_url, qrcode_html=qrcode_html), 201
 
 
 @app.route('/get/<sid>/<key>')

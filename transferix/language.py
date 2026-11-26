@@ -61,11 +61,10 @@ TRANS = {
         'request': 'Request a secret',
         'request desc': 'Give the Request-Link (validity 7 days) below to someone you want '
                         'to retrieve a secret from. Afterwards push "Receive the secret" to wait for the secret.',
+        'request secret stored': 'Secret stored',
+        'request secret stored desc': 'The requested secret can now be revealed on the other side.',
         'reveal!': 'Reveal the secret',
         'reveal?': 'Reveal this secret?',
-        'rid missing or invalid': 'Request ID missing or invalid.',
-        'rid secret stored': 'Secret stored',
-        'rid secret stored desc': 'The requested secret can now be revealed on the other side.',
         'secret': 'Secret',
         'share new secret': 'Share a new secret',
         'share new file': 'Share a new file',
@@ -73,6 +72,7 @@ TRANS = {
         'share this desc': 'Send this link to someone else. [em]It will '
                            'be valid for 7 days.[/em]',
         'title': 'Share a secret',
+        'unauthenticated': 'Authentication required.',
         'unknown error': 'Unknown error.',
         'waiting for secret': 'Waiting for secret',
         'waiting for secret desc': 'The other side has not entered the secret yet.',
@@ -131,11 +131,10 @@ TRANS = {
         'request': 'Vertrauliche Daten anfordern',
         'request desc': 'Geben Sie den untenstehenden Request-Link (7 Tage gültig) an die Person weiter, '
                         'von der sie vertrauliche Daten erhalten möchten. Drücken Sie danach auf "Vertrauliche Daten erhalten".',
+        'request secret stored': 'Vertrauliche Daten gespeichert',
+        'request secret stored desc': 'Die vertraulichen Daten können nun auf der anderen Seite abgerufen werden.',
         'reveal!': 'Vertrauliche Daten anzeigen',
         'reveal?': 'Vertrauliche Daten anzeigen?',
-        'rid missing or invalid': 'Die Request ID fehlt oder ist ungültig.',
-        'rid secret stored': 'Vertrauliche Daten gespeichert',
-        'rid secret stored desc': 'Die vertraulichen Daten können nun auf der anderen Seite abgerufen werden.',
         'secret': 'Vertrauliche Daten',
         'share new secret': 'Neue vertrauliche Daten',
         'share new file': 'Neue vertrauliche Datei hochladen',
@@ -143,6 +142,7 @@ TRANS = {
         'share this desc': 'Geben Sie den folgenden Link weiter. [em]Er '
                            'ist nur für 7 Tage gültig.[/em]',
         'title': 'Vertrauliche Daten weitergeben',
+        'unauthenticated': 'Authentifizierung erforderlich.',
         'unknown error': 'Unbekannter Fehler.',
         'waiting for secret': 'Warte auf vertrauliche Informationen',
         'waiting for secret desc': 'Bisher wurden auf der anderen Seite noch keine vertraulichen Informationen eingegeben.',
