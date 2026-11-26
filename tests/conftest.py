@@ -38,3 +38,12 @@ def client():
     flask_app.config['TESTING'] = True
     with flask_app.test_client() as c:
         yield c
+
+
+@pytest.fixture()
+def client_auth():
+    flask_app.config['TESTING'] = True
+    with flask_app.test_client() as c:
+        c.environ_base['HTTP_REMOTE_USER'] = 'testuser'
+        c.environ_base['HTTP_REMOTE_GROUPS'] = 'transferix;groupa'
+        yield c

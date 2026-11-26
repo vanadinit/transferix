@@ -1,6 +1,7 @@
 from flask import jsonify, request, url_for, Response
 
 from . import app
+from .auth import auth_required
 from .crypto import retrieve
 from .exceptions import TransferixException
 from .keys import generate_request_token, generate_sid, generate_key, get_key_from_bytes, validate_key
@@ -8,6 +9,7 @@ from .base import new_secret, validate_reveal, secret_ready
 
 
 @app.route('/api/new', methods=['POST'])
+@auth_required()
 def api_new() -> tuple[Response, int]:
     """
     API endpoint /api/new
@@ -68,6 +70,7 @@ def api_reveal() -> tuple[Response, int]:
 
 
 @app.route('/api/request', methods=['POST'])
+@auth_required(temp=True)
 def api_request() -> tuple[Response, int]:
     """
     API endpoint /api/request

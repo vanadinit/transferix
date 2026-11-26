@@ -6,6 +6,7 @@ from urllib.parse import quote
 from flask import make_response, request, url_for, render_template
 
 from . import app
+from .auth import auth_required
 from .base import new_secret, validate_reveal, secret_ready, get_request_params
 from .config import MAX_FILE_SIZE_HUMAN
 from .crypto import retrieve, secret_exists_as_file
@@ -31,6 +32,7 @@ def inject_globals():
 
 @app.route('/')
 @app.route('/r/<sid>/<key>')
+@auth_required()
 def form_plain(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
     request_path, request_info = get_request_params(sid=sid, key=key, target='form_file')
     return render_template(
@@ -43,6 +45,7 @@ def form_plain(sid: str | None = None, key: str | None = None) -> str | tuple[st
 
 @app.route('/file')
 @app.route('/file/<sid>/<key>')
+@auth_required()
 def form_file(sid: str | None = None, key: str | None = None) -> str | tuple[str, int]:
     request_path, request_info = get_request_params(sid=sid, key=key, target='form_plain')
     return render_template(
@@ -55,6 +58,7 @@ def form_file(sid: str | None = None, key: str | None = None) -> str | tuple[str
 
 
 @app.route('/request')
+@auth_required(temp=True)
 def request_secret() -> Any:
     sid = generate_sid(is_request=True)
     key = get_key_from_bytes(generate_key())
@@ -82,6 +86,7 @@ def request_consume() -> Any:
 
 
 @app.route('/new', methods=['POST'])
+@auth_required()
 def new() -> str | tuple[str, int] | Any:
     if request.is_json:
         raise TransferixException(msg='Please use API endpoint.', status_code=400)

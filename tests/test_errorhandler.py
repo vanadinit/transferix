@@ -27,8 +27,8 @@ def test_405_api_wrong_method(client):
 
 @patch('transferix.crypto.DATA', new=Path('/tmp/notexisting'))
 @patch('transferix.base.generate_sid', return_value='123456')
-def test_500_does_not_leak_details(mock_generate_sid: MagicMock, client):
-    r = client.post('/new', data={'data': 'x'})
+def test_500_does_not_leak_details(mock_generate_sid: MagicMock, client_auth):
+    r = client_auth.post('/new', data={'data': 'x'})
     assert r.status_code == 500
     assert b'/tmp/' not in r.data
     assert b'Unknown error' in r.data
