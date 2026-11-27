@@ -49,6 +49,7 @@ class HeaderLoginInfo(LoginInfo):
     def __init__(self):
         if request.headers.get('Remote-User'):
             super().__init__(
+                logged_in=True,
                 username=request.headers['Remote-User'],
                 groups=request.headers.get('Remote-Groups', '').split(';')
             )
@@ -60,6 +61,7 @@ class OIDCLoginInfo(LoginInfo):
     def __init__(self):
         if oidc.user_loggedin:
             super().__init__(
+                logged_in=True,
                 username=g.oidc_user.profile.get('name'),
                 email=g.oidc_user.profile.get('email'),
                 groups=g.oidc_user.profile.get('groups'),

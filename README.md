@@ -50,6 +50,9 @@ Use the following environment variables:
 -   `$TRANSFERIX_AUTH_METHOD`: Activate authentication, possible values: `remote-user`, `oidc`
 -   `$TRANSFERIX_OIDC_CLIENT_SECRETS`: Path to client_secrets.json for OIDC authentication
 -   `$TRANSFERIX_PRIVILEGED_GROUPS`: Comma-separated list of privileged user groups
+-   `$TRANSFERIX_SECRET_KEY`: Random secret key for the application.
+     Use `python3 -c 'from secrets import token_hex; print(token_hex(24))'`
+     or a similar mechanism to generate a key.
 
 The program does not automatically remove secrets or requests which have
 never been retrieved or consumed. You might want to install a cron job on your
