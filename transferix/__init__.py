@@ -9,7 +9,7 @@ from .config import MAX_FILE_SIZE
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
-app.config["SECRET_KEY"] = environ['TRANSFERIX_SECRET_KEY'],
+app.config["SECRET_KEY"] = environ['TRANSFERIX_SECRET_KEY']
 
 
 @app.after_request

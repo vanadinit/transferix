@@ -62,11 +62,11 @@ class OIDCLoginInfo(LoginInfo):
         if oidc.user_loggedin:
             super().__init__(
                 logged_in=True,
-                username=g.oidc_user.profile.get('name'),
-                email=g.oidc_user.profile.get('email'),
-                groups=g.oidc_user.profile.get('groups'),
+                username=g.oidc_user.profile.get('name', ''),
+                email=g.oidc_user.profile.get('email', ''),
+                groups=g.oidc_user.profile.get('groups', []),
             )
-            app.logger.debug(dir(g.oidc_user.profile))
+            app.logger.debug(g.oidc_user.profile.items())
         else:
             super().__init__()
 
