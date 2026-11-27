@@ -6,7 +6,7 @@ from urllib.parse import quote
 from flask import make_response, request, url_for, render_template
 
 from . import app
-from .auth import auth_required, login
+from .auth import auth_required, get_login_info, request_toggle
 from .base import new_secret, validate_reveal, secret_ready, validate_request
 from .config import MAX_FILE_SIZE_HUMAN
 from .crypto import retrieve, secret_exists_as_file
@@ -27,6 +27,7 @@ def inject_globals():
         'logo_url': getenv('TRANSFERIX_LOGO', url_for('static', filename='logo.png')),
         'logo_dark_url': getenv('TRANSFERIX_LOGO_DARK', url_for('static', filename='logo-darkmode.png')),
         'logo_alt': getenv('TRANSFERIX_LABEL', 'my company'),
+        'request_toggle': request_toggle(),
     }
 
 
@@ -117,7 +118,7 @@ def new() -> str | tuple[str, int] | Any:
             'message.html',
             msg={'head': 'rid secret stored', 'content': 'rid secret stored desc'},
         ), 201
-    elif not login():
+    elif not get_login_info():
         raise TransferixException('unauthenticated', 401)
     return render_template('share.html', sid_url=sid_url, qrcode_html=qrcode_html), 201
 

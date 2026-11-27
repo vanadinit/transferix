@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from os import getenv
+from secrets import token_hex
 
 from flask import Flask, Response
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -9,6 +10,7 @@ from .config import MAX_FILE_SIZE
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
+app.config["SECRET_KEY"] = token_hex(24)
 
 
 @app.after_request

@@ -47,6 +47,9 @@ Use the following environment variables:
 -   `$TRANSFERIX_ENABLE_QR`: Set to an arbitrary value to show QR code
     of the share links. Needs `qrcode` Python library to be installed.
 -   `$TRANSFERIX_ENABLE_API`: Set to an arbitrary value to enable API endpoints.
+-   `$TRANSFERIX_AUTH_METHOD`: Activate authentication, possible values: `remote-user`, `oidc`
+-   `$TRANSFERIX_OIDC_CLIENT_SECRETS`: Path to client_secrets.json for OIDC authentication
+-   `$TRANSFERIX_PRIVILEGED_GROUPS`: Comma-separated list of privileged user groups
 
 The program does not automatically remove secrets or requests which have
 never been retrieved or consumed. You might want to install a cron job on your

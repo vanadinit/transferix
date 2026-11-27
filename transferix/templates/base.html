@@ -14,6 +14,8 @@
       <img src="{{ logo_url }}" id="logo" alt="{{ logo_alt }}">
     </picture>
   </a>
+  {% if g.oidc_user %}<p>Hi {{ g.oidc_user }}</p>{% endif %}
+  {% if request_toggle %}<p>Hier der Toggle</p>{% endif %}
   {% block body %}{% endblock %}
 </body>
 </html>
